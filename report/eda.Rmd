@@ -1,0 +1,180 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
+source(here::here("script/setup.R"))
+```
+
+## **Data Preparation**
+
+### **Data Retrieval**
+
+#### Amazon Online Marketplace
+
+```{r}
+
+retrieve_reviews <- function(html="https://www.amazon.de/Samsung-smartphone-contract-6-8-inch-including/product-reviews/B09QH28JX8/ref=cm_cr_arp_d_viewopt_actns?ie=UTF8&reviewerType=all_reviews&mediaType=all_contents&pageNumber=1", next.pages.no = 12) {
+
+  # Create list of links from reviews of smartphones
+  new_list <- list()
+  
+  # Adding first page link to the new list
+  first.page <- c(html)
+  new_list <- append(new_list,first.page)
+  
+  # Create list of the up coming 60 days
+  for (i in 1:next.pages.no) {
+    if (i == 1) {
+      smartphone.html <- read_html(html) # webpage
+      a_element <- smartphone.html %>%
+        html_nodes(".a-form-actions.a-spacing-top-extra-large .a-last>a") %>% 
+        html_attr("href")
+      new.html <- paste("https://www.amazon.de/",a_element, sep = "") 
+      new_list <- append(new_list,new.html)
+    } else { 
+      smartphone.html <- read_html(new.html) # webpage
+      a_element <- smartphone.html %>%
+        html_nodes(".a-form-actions.a-spacing-top-extra-large .a-last>a") %>% 
+        html_attr("href")
+      new.html <- paste("https://www.amazon.de/",a_element, sep = "") 
+      new_list <- append(new_list,new.html)
+    }
+  }
+  
+  # Transform to a vector of characters
+  new_vector <- unlist(new_list)
+      
+  # Creating two empty data frames for table
+  smartphone <-data.frame()
+  smartphone_reviews <- data.frame()
+  
+  # Create table of smartphone reviews
+  for (i in 1:next.pages.no + 1) {
+    smartphone.html <- read_html(new_vector[i])
+    smartphone <- smartphone.html %>%
+      html_nodes(".a-section.review.aok-relative .a-row.a-spacing-small.review-data span") %>% 
+      html_text2() %>% 
+      data.frame() %>% 
+      rename("Reviews" = ".")
+    smartphone_reviews <- rbind(smartphone_reviews,smartphone) # Create table
+  }
+  
+  # Remove NAs
+  smartphone_reviews <- smartphone_reviews %>%
+  mutate_all(na_if,"") %>%
+  na.omit()
+  
+  # Data frame with reviews
+  return(smartphone_reviews)
+}
+```
+
+
+```{r}
+# Samsung Galaxy S22 Ultra
+#------------------------------------------------------
+samsungS22_reviews <- retrieve_reviews(html="https://www.amazon.de/Samsung-smartphone-contract-6-8-inch-including/product-reviews/B09QH28JX8/ref=cm_cr_getr_d_paging_btm_prev_1?ie=UTF8&pageNumber=1&reviewerType=all_reviews&pageSize=10", next.pages.no = 12)
+
+# Remove rows that not make sense (every row is duplicated but there are some that are alone = erase those)
+samsungS22_reviews <- samsungS22_reviews %>% 
+  filter(!row_number() %in% c(132,137))
+
+# Delete duplicates
+delete <- seq(1, length(samsungS22_reviews$Reviews), 2)
+samsungS22_reviews <-  samsungS22_reviews[-delete, ]
+samsungS22_reviews <- samsungS22_reviews %>%     
+  data.frame() %>% 
+  rename("Reviews" = ".") %>% 
+  mutate(Model = "Samsung Galaxy S22 Ultra") %>% 
+  relocate(Model, .before = Reviews)
+
+
+# Apple iPhone 14 Pro
+#------------------------------------------------------
+iphone14Pro_reviews <- retrieve_reviews(html="https://www.amazon.de/-/en/MPXV3ZD-A/product-reviews/B0BDJ61GFY/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 15)
+
+# Remove rows that not make sense (every row is duplicated but there are some that are alone = erase those)
+iphone14Pro_reviews <- iphone14Pro_reviews %>% 
+  filter(!row_number() %in% c(143,163,165,167,169,278)) %>% 
+    filter(!row_number() %in% c(189)) 
+
+# Delete duplicates
+delete <- seq(1, length(iphone14Pro_reviews$Reviews), 2)
+iphone14Pro_reviews <-  iphone14Pro_reviews[-delete, ]
+iphone14Pro_reviews <- iphone14Pro_reviews %>%     
+  data.frame() %>% 
+  rename("Reviews" = ".")  %>% 
+  mutate(Model = "iPhone 14 Pro") %>% 
+  relocate(Model, .before = Reviews)
+
+
+# OnePlus 10 Pro
+#------------------------------------------------------
+onePlus10Pro_reviews <- retrieve_reviews(html="https://www.amazon.de/-/en/OnePlus-Smartphone-Hasselblad-Camera-Generation/product-reviews/B09SGN4BZ3/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 15)
+
+# Remove rows that not make sense (every row is duplicated but there are some that are alone = erase those)
+onePlus10Pro_reviews <- onePlus10Pro_reviews %>% 
+  filter(!row_number() %in% c(207))  
+
+# Delete duplicates
+delete <- seq(1, length(onePlus10Pro_reviews$Reviews), 2)
+onePlus10Pro_reviews <-  onePlus10Pro_reviews[-delete, ]
+onePlus10Pro_reviews <- onePlus10Pro_reviews %>%     
+  data.frame() %>% 
+  rename("Reviews" = ".") %>% 
+  mutate(Model = "OnePlus 10 Pro") %>% 
+  relocate(Model, .before = Reviews)
+
+
+# Google Pixel 7
+#------------------------------------------------------
+googlePixel7_reviews <- retrieve_reviews(html="https://www.amazon.de/-/en/Google-Pixel-Unlocked-Smartphone-Obsidian/product-reviews/B0BDK63RF3/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 15)
+
+# Remove rows that not make sense (every row is duplicated but there are some that are alone = erase those)
+googlePixel7_reviews <- googlePixel7_reviews %>% 
+  filter(!row_number() %in% c(206))  
+
+# Delete duplicates
+delete <- seq(1, length(googlePixel7_reviews$Reviews), 2)
+googlePixel7_reviews <-  googlePixel7_reviews[-delete, ]
+googlePixel7_reviews <- googlePixel7_reviews %>%     
+  data.frame() %>% 
+  rename("Reviews" = ".") %>% 
+  mutate(Model = "Google Pixel 7") %>% 
+  relocate(Model, .before = Reviews)
+
+
+# Xiaomi Mi 11
+#------------------------------------------------------
+xiaomiMi11_reviews <- retrieve_reviews(html="https://www.amazon.de/-/en/Xiaomi-256GB-Midnight-Grey-Dual/product-reviews/B08XW5B68Z/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 15)
+
+# Delete duplicates
+delete <- seq(1, length(xiaomiMi11_reviews$Reviews), 2)
+xiaomiMi11_reviews <-  xiaomiMi11_reviews[-delete, ]
+xiaomiMi11_reviews <- xiaomiMi11_reviews %>%     
+  data.frame() %>% 
+  rename("Reviews" = ".") %>% 
+  mutate(Model = "Xiaomi Mi 11") %>% 
+  relocate(Model, .before = Reviews)
+
+# Create Master Table of Amazon
+amazon_reviews <- data.frame()
+amazon_reviews <- rbind(amazon_reviews,samsungS22_reviews)
+amazon_reviews <- rbind(amazon_reviews,iphone14Pro_reviews)
+amazon_reviews <- rbind(amazon_reviews,onePlus10Pro_reviews)
+amazon_reviews <- rbind(amazon_reviews,googlePixel7_reviews)
+amazon_reviews <- rbind(amazon_reviews,xiaomiMi11_reviews)
+amazon_reviews <- amazon_reviews %>% 
+  mutate(Marketplace = "Amazon") %>% 
+  relocate(Marketplace, .before = Model)
+
+# I added the file on the data folder
+# write.csv(amazon_reviews,file= "amazon.csv", row.names = FALSE)
+
+
+```
+

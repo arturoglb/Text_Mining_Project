@@ -1,0 +1,26 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
+source(here::here("script/setup.R"))
+```
+
+## **Conclusion**
+
+
+
+## **References**
+
+[caret: Classification and Regression Training, accessed on 30 April 2022](https://cran.r-project.org/web/packages/caret/caret.pdf)
+
+
+
+
+
+
+
+ 
