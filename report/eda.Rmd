@@ -26,7 +26,7 @@ retrieve_reviews <- function(html="https://www.amazon.de/Samsung-smartphone-cont
   first.page <- c(html)
   new_list <- append(new_list,first.page)
   
-  # Create list of the up coming 60 days
+  # Create list of the following pages of reviews
   for (i in 1:next.pages.no) {
     if (i == 1) {
       smartphone.html <- read_html(html) # webpage
