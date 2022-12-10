@@ -224,13 +224,13 @@ Generation_11th <- rbind(iphone11Pro_max_reviews, iphone11Pro_reviews,
 ### Adding all together
 
 Apple <- rbind(Generation_11th,Generation_12th, Generation_13th)
-Apple_reviews <- Apple[-4604,]
+Apple_reviews <- Apple[-7418,]
 Apple_reviews <- Apple_reviews %>% 
   mutate(Brand = "Apple") %>%
   relocate(Brand, .before = Model)
 
 # Add the Apple file to the data folder
-# write.csv(Apple_reviews,file= "Apple.csv", row.names = FALSE)
+write.csv(Apple_reviews,file= "Apple.csv", row.names = FALSE)
 ```
 
 ##### **Samsung**
@@ -364,7 +364,7 @@ Samsung_reviews <- Samsung %>%
   relocate(Brand, .before = Model)
 
 # Add the Samsung file to the data folder
-# write.csv(Samsung_reviews,file= "Samsung.csv", row.names = FALSE)
+write.csv(Samsung_reviews,file= "Samsung.csv", row.names = FALSE)
 ```
 
 ```{r}
