@@ -1,0 +1,377 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r, include=FALSE}
+source(here::here("script/setup.R"))
+```
+
+## **Data Preparation**
+
+### **Data Retrieval**
+
+#### Amazon Online Marketplace US 
+
+
+```{r}
+# Create Web scrapping function to download the mobile phone reviews
+retrieve_reviews <- function(html="https://www.amazon.com/Apple-iPhone-13-Pro-Max/product-reviews/B09LPDM924/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 9) {
+  # Create list of links from reviews of smartphones
+  new_list <- list()
+  
+  # Adding first page link to the new list
+  first.page <- c(html)
+  new_list <- append(new_list,first.page)
+  
+  # Create list of the following pages of reviews
+  for (i in 1:next.pages.no) {
+    if (i == 1) {
+      smartphone.html <- read_html(html) # webpage
+      a_element <- smartphone.html %>%
+        html_nodes(".a-form-actions.a-spacing-top-extra-large .a-last>a") %>% 
+        html_attr("href")
+      new.html <- paste("https://www.amazon.com/",a_element, sep = "") 
+      new_list <- append(new_list,new.html)
+    } else { 
+      smartphone.html <- read_html(new.html) # webpage
+      a_element <- smartphone.html %>%
+        html_nodes(".a-form-actions.a-spacing-top-extra-large .a-last>a") %>% 
+        html_attr("href")
+      new.html <- paste("https://www.amazon.com/",a_element, sep = "") 
+      new_list <- append(new_list,new.html)
+    }
+  }
+  
+  # Transform to a vector of characters
+  new_vector <- unlist(new_list)
+      
+  # Creating two empty data frames for table
+  smartphone <-data.frame()
+  smartphone_reviews <- data.frame()
+  
+  # Create table of smartphone reviews
+  for (i in 1:next.pages.no + 1) {
+    smartphone.html <- read_html(new_vector[i])
+    smartphone <- smartphone.html %>%
+      html_nodes(".a-section.review.aok-relative .a-row.a-spacing-small.review-data span") %>% 
+      html_text2() %>% 
+      data.frame() %>% 
+      rename("Reviews" = ".")
+    smartphone_reviews <- rbind(smartphone_reviews,smartphone) # Create table
+  }
+  
+  # Remove NAs
+  smartphone_reviews <- smartphone_reviews %>%
+  mutate_all(na_if,"") %>%
+  na.omit()
+  
+  # Data frame with reviews
+  return(smartphone_reviews)
+}
+```
+
+##### **Apple**
+
+```{r}
+
+### Generation_13th
+#-------------------------------------------------------------------------------
+iphone13Pro_max_reviews <- retrieve_reviews(html="https://www.amazon.com/Apple-iPhone-13-Pro-Max/product-reviews/B09LPDM924/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 9)
+
+# Remove rows that not make sense (every row is duplicated but there are some that are alone = erase those)
+# iphone13Pro_reviews <- iphone13Pro_reviews %>% 
+#   filter(!row_number() %in% c(143,163,165,167,169,278)) %>% 
+#     filter(!row_number() %in% c(189)) 
+#Delete duplicates
+delete <- seq(1, length(iphone13Pro_max_reviews$Reviews), 2)
+iphone13Pro_max_reviews <-  iphone13Pro_max_reviews[-delete, ]
+iphone13Pro_max_reviews <- iphone13Pro_max_reviews %>%     
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 13 Pro Max") %>%
+  relocate(Model, .before = Reviews)
+
+iphone13Pro_reviews <- retrieve_reviews(html="https://www.amazon.com/Apple-iPhone-13-Pro-Sierra/product-reviews/B09LPB9SQH/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 8)
+
+#Delete duplicates
+delete <- seq(1, length(iphone13Pro_reviews$Reviews), 2)
+iphone13Pro_reviews <-  iphone13Pro_reviews[-delete, ]
+iphone13Pro_reviews <- iphone13Pro_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 13 Pro") %>%
+  relocate(Model, .before = Reviews)
+iphone13Pro_reviews <- iphone13Pro_reviews[-2,]
+
+
+iphone13_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-13-128GB-Midnight/product-reviews/B09LNW3CY2/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 18)
+
+
+#Delete duplicates
+delete <- seq(1, length(iphone13_reviews$Reviews), 2)
+iphone13_reviews <-  iphone13_reviews[-delete, ]
+iphone13_reviews <- iphone13_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 13") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone13mini_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-13-128GB-Green/product-reviews/B0B5CHRXFV/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 16)
+
+#Delete duplicates
+delete <- seq(1, length(iphone13mini_reviews$Reviews), 2)
+iphone13mini_reviews <-  iphone13mini_reviews[-delete, ]
+iphone13mini_reviews <- iphone13mini_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 13 mini") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_13th <- rbind(iphone13Pro_max_reviews, iphone13Pro_reviews, 
+                         iphone13_reviews, iphone13mini_reviews)
+
+
+### Generation_12th
+#-------------------------------------------------------------------------------
+iphone12_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-12-64GB-Black/product-reviews/B08PP5MSVB/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 98)
+
+#Delete duplicates
+delete <- seq(1, length(iphone12_reviews$Reviews), 2)
+iphone12_reviews <-  iphone12_reviews[-delete, ]
+iphone12_reviews <- iphone12_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 12") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone12Pro_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-Pro-128GB-Graphite/product-reviews/B08PNP5YGV/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 54)
+
+#Delete duplicates
+delete <- seq(1, length(iphone12Pro_reviews$Reviews), 2)
+iphone12Pro_reviews <-  iphone12Pro_reviews[-delete, ]
+iphone12Pro_reviews <- iphone12Pro_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 12 Pro") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone12mini_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-12-Mini-Black/product-reviews/B08PPDJWC8/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 79)
+
+#Delete duplicates
+delete <- seq(1, length(iphone12mini_reviews$Reviews), 2)
+iphone12mini_reviews <-  iphone12mini_reviews[-delete, ]
+iphone12mini_reviews <- iphone12mini_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 12 mini") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone12Pro_max_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-12-Pro-Max/product-reviews/B09JF9WMR9/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 11)
+
+#Delete duplicates
+delete <- seq(1, length(iphone12Pro_max_reviews$Reviews), 2)
+iphone12Pro_max_reviews <-  iphone12Pro_max_reviews[-delete, ]
+iphone12Pro_max_reviews <- iphone12Pro_max_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 12 Pro Max") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_12th <- rbind(iphone12Pro_max_reviews, iphone12Pro_reviews, 
+                         iphone12_reviews, iphone12mini_reviews)
+
+### Generation_11th
+#-------------------------------------------------------------------------------
+iphone11Pro_max_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-256GB-Space-Gray/product-reviews/B07ZQSSKY4/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 241)
+
+#Delete duplicates
+delete <- seq(1, length(iphone11Pro_max_reviews$Reviews), 2)
+iphone11Pro_max_reviews <-  iphone11Pro_max_reviews[-delete, ]
+iphone11Pro_max_reviews <- iphone11Pro_max_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 11 Pro Max") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone11Pro_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-256GB-Unlocked-Renewed/product-reviews/B07ZQRL9XY/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no =  284)
+
+#Delete duplicates
+delete <- seq(1, length(iphone11Pro_reviews$Reviews), 2)
+iphone11Pro_reviews <-  iphone11Pro_reviews[-delete, ]
+iphone11Pro_reviews <- iphone11Pro_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 11 Pro") %>%
+  relocate(Model, .before = Reviews) 
+
+iphone11_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-11-64GB-Black/product-reviews/B07ZPKN6YR/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 581)
+
+#Delete duplicates
+delete <- seq(1, length(iphone11_reviews$Reviews), 2)
+iphone11_reviews <-  iphone11_reviews[-delete, ]
+iphone11Pro_reviews <- iphone11_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "iPhone 11") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_11th <- rbind(iphone11Pro_max_reviews, iphone11Pro_reviews, 
+                         iphone11_reviews)
+
+### Adding all together
+
+Apple <- rbind(Generation_11th,Generation_12th, Generation_13th)
+Apple_reviews <- Apple[-7418,]
+Apple_reviews <- Apple_reviews %>% 
+  mutate(Brand = "Apple") %>%
+  relocate(Brand, .before = Model)
+
+# Add the Apple file to the data folder
+write.csv(Apple_reviews,file= "Apple.csv", row.names = FALSE)
+```
+
+##### **Samsung**
+
+```{r}
+### Generation S20
+#-------------------------------------------------------------------------------
+samsungGalaxyS20FE_reviews <- retrieve_reviews(html="https://www.amazon.com/Samsung-Galaxy-G780F-Unlocked-Android/product-reviews/B08KYHN9WC/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 8)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS20FE_reviews$Reviews), 2)
+samsungGalaxyS20FE_reviews <-  samsungGalaxyS20FE_reviews[-delete, ]
+samsungGalaxyS20FE_reviews <- samsungGalaxyS20FE_reviews %>%     
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S20 FE") %>%
+  relocate(Model, .before = Reviews)
+
+samsungGalaxyS20Plus_reviews <- retrieve_reviews(html="https://www.amazon.com/Samsung-Unlocked-Fingerprint-Recognition-Long-Lasting/product-reviews/B082XY6YYZ/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 10)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS20Plus_reviews$Reviews), 2)
+samsungGalaxyS20Plus_reviews <-  samsungGalaxyS20Plus_reviews[-delete, ]
+samsungGalaxyS20Plus_reviews <- samsungGalaxyS20Plus_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S20 Plus") %>%
+  relocate(Model, .before = Reviews)
+
+
+samsungGalaxyNote20Ultra_reviews <- retrieve_reviews("https://www.amazon.com/Samsung-Galaxy-Ultra-128GB-Mystic/product-reviews/B09DLCT14X/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 4)
+
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyNote20Ultra_reviews$Reviews), 2)
+samsungGalaxyNote20Ultra_reviews <-  samsungGalaxyNote20Ultra_reviews[-delete, ]
+samsungGalaxyNote20Ultra_reviews <- samsungGalaxyNote20Ultra_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy Note 20 Ultra") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_S20 <- rbind(samsungGalaxyS20FE_reviews, samsungGalaxyS20Plus_reviews,
+                        samsungGalaxyNote20Ultra_reviews)
+
+
+### Generation S21
+#-------------------------------------------------------------------------------
+samsungGalaxyS21FE_reviews <- retrieve_reviews(html="https://www.amazon.com/Samsung-Factory-Unlocked-Smartphone-Intelligent/product-reviews/B09BFRV59N/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 178)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS21FE_reviews$Reviews), 2)
+samsungGalaxyS21FE_reviews <-  samsungGalaxyS21FE_reviews[-delete, ]
+samsungGalaxyS21FE_reviews <- samsungGalaxyS21FE_reviews %>%     
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S21 FE") %>%
+  relocate(Model, .before = Reviews)
+
+samsungGalaxyS21Plus_reviews <- retrieve_reviews(html="https://www.amazon.com/Samsung-Unlocked-Smartphone-Pro-Grade-SM-G996UZVAXAA/product-reviews/B08N3LQBS9/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 37)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS21Plus_reviews$Reviews), 2)
+samsungGalaxyS21Plus_reviews <-  samsungGalaxyS21Plus_reviews[-delete, ]
+samsungGalaxyS21Plus_reviews <- samsungGalaxyS21Plus_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S21 Plus") %>%
+  relocate(Model, .before = Reviews)
+
+
+samsungGalaxy21Ultra_reviews <- retrieve_reviews("https://www.amazon.com/Samsung-Galaxy-SM-G998B-International-Version/product-reviews/B08T1TDFVX/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 4)
+
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxy21Ultra_reviews$Reviews), 2)
+samsungGalaxy21Ultra_reviews <-  samsungGalaxy21Ultra_reviews[-delete, ]
+samsungGalaxy21Ultra_reviews <- samsungGalaxy21Ultra_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy 21 Ultra") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_S21 <- rbind(samsungGalaxyS21FE_reviews, samsungGalaxyS21Plus_reviews,
+                        samsungGalaxy21Ultra_reviews)
+
+### Generation S22
+#-------------------------------------------------------------------------------
+samsungGalaxyS22_reviews <- retrieve_reviews(html="https://www.amazon.com/SAMSUNG-Smartphone-Unlocked-Brightest-Processor/product-reviews/B09MVYVBR6/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 6)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS22_reviews$Reviews), 2)
+samsungGalaxyS22_reviews <-  samsungGalaxyS22_reviews[-delete, ]
+samsungGalaxyS22_reviews <- samsungGalaxyS22_reviews %>%     
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S22") %>%
+  relocate(Model, .before = Reviews)
+
+samsungGalaxyS22Plus_reviews <- retrieve_reviews(html="https://www.amazon.com/SAMSUNG-Smartphone-Unlocked-Brightest-Processor/product-reviews/B09MVZTYC2/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 8)
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxyS22Plus_reviews$Reviews), 2)
+samsungGalaxyS22Plus_reviews <-  samsungGalaxyS22Plus_reviews[-delete, ]
+samsungGalaxyS22Plus_reviews <- samsungGalaxyS22Plus_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy S22 Plus") %>%
+  relocate(Model, .before = Reviews)
+
+
+samsungGalaxy22Ultra_reviews <- retrieve_reviews("https://www.amazon.com/SAMSUNG-Smartphone-Unlocked-Brightest-Processor/product-reviews/B09MW19JW2/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews", next.pages.no = 17)
+
+
+#Delete duplicates
+delete <- seq(1, length(samsungGalaxy22Ultra_reviews$Reviews), 2)
+samsungGalaxy22Ultra_reviews <-  samsungGalaxy22Ultra_reviews[-delete, ]
+samsungGalaxy22Ultra_reviews <- samsungGalaxy22Ultra_reviews %>%
+  data.frame() %>%
+  rename("Reviews" = ".")  %>%
+  mutate(Model = "Samsung Galaxy 22 Ultra") %>%
+  relocate(Model, .before = Reviews) 
+
+Generation_S22 <- rbind(samsungGalaxyS22_reviews, samsungGalaxyS22Plus_reviews, 
+                        samsungGalaxy22Ultra_reviews)
+
+# Create final table 
+Samsung <- rbind(Generation_S20, Generation_S21, Generation_S22)
+Samsung_reviews <- Samsung %>% 
+  mutate(Brand = "Samsung") %>%
+  relocate(Brand, .before = Model)
+
+# Add the Samsung file to the data folder
+write.csv(Samsung_reviews,file= "Samsung.csv", row.names = FALSE)
+```
+
+```{r}
+# Create master table with both brands
+smartphone_reviews <- rbind(Apple_reviews, Samsung_reviews)
+
+# Create CSV file
+write.csv(smartphone_reviews,file= "smartphone_reviews.csv", row.names = FALSE)
+```
+
+
