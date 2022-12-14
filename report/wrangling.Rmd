@@ -430,31 +430,6 @@ Apple <- cbind(Apple, apple_lang)
 
 # Create CSV file for EDA
 write.csv(Apple,file= "apple_class.csv", row.names = FALSE)
-
-# # Creating two empty dataframes for table
-# table_new <-data.frame()
-# samsung_lang <- data.frame()
-# 
-# for (i in 1:51) {
-#   if (i == 1) {
-#   outputs <- detector(Samsung$Reviews[i:50], max_length = 512L, truncation=TRUE)
-#   test <- data.frame(outputs)
-#   x <- seq(from = 1, to = 100, by = 2)
-#   table_new <- data.frame(bind_cols(c(x = test[,x])))
-#   table_new <- table_new %>% 
-#     pivot_longer(cols = c(1:50), names_to = "ID", values_to = "Language") 
-#   samsung_lang <- rbind(samsung_lang,table_new)
-#   } else {
-#     outputs <- detector(Samsung$Reviews[(50*i-49):(50*i)], max_length = 512L,
-#                         truncation=TRUE)
-#     test <- data.frame(outputs)
-#     x <- seq(from = 1, to = 100, by = 2)
-#     table_new <- data.frame(bind_cols(c(x = test[,x])))
-#     table_new <- table_new %>% 
-#       pivot_longer(cols = c(1:50), names_to = "ID", values_to = "Language") 
-#     samsung_lang <- rbind(samsung_lang,table_new)
-#   }
-# }
 ```
 
 ### **Language Translation**
@@ -493,13 +468,13 @@ samsung_es_en <- table_new %>%
   pivot_longer(cols = c(1:335), names_to = "ID", values_to = "Reviews") %>% 
   select(-ID)
 
-# Create CSV file for EDA
-write.csv(samsung_es_en,file= "samsung_es_en.csv", row.names = FALSE)
-
 samsung_translated <- samsung_es %>% 
   select(-c(Reviews, Language)) %>% 
   cbind(samsung_es_en) %>% 
   mutate(Language = "en")
+
+# Create CSV file for EDA
+write.csv(samsung_translated,file= "samsung_es_en.csv", row.names = FALSE)
 
 # Adding translations to English reviews
 samsung_en <- rbind(samsung_en, samsung_translated)
@@ -536,13 +511,13 @@ apple_es_en <- table_new %>%
   pivot_longer(cols = c(1:2700), names_to = "ID", values_to = "Reviews") %>% 
   select(-ID)
 
-# Create CSV file for EDA
-write.csv(apple_es_en,file= "apple_es_en.csv", row.names = FALSE)
-
 apple_translated <- apple_es %>% 
   select(-c(Reviews, Language)) %>% 
   cbind(apple_es_en) %>% 
   mutate(Language = "en")
+
+# Create CSV file for EDA
+write.csv(apple_translated,file= "apple_es_en.csv", row.names = FALSE)
 
 # Adding translations to English reviews
 apple_en <- rbind(apple_en, apple_translated)
