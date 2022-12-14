@@ -1,0 +1,39 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
+source(here::here("script/setup.R"))
+```
+
+## **Exploratory Data Analysis**
+
+### Tokenization and Cleaning
+
+```{r}
+## Import and clean the data with quanteda
+apple <- read.csv(here::here("data/Apple.csv"))
+apple.cp <- corpus(apple$Reviews)
+apple.tk <- tokens(apple.cp,
+                   remove_numbers = T,
+                   remove_punct = T,
+                   remove_symbols = T,
+                   remove_separators = T)
+apple.tk <- apple.tk %>% 
+  tokens_tolower() %>% 
+  tokens_remove(stop_words$word) 
+
+## Compute the DTM, TF-IDF and global frequencies
+apple.dfm <- dfm(apple.tk)
+apple.tfidf <- dfm_tfidf(apple.dfm)
+apple.freq <- textstat_frequency(apple.dfm)
+```
+
+
+```{r}
+samsung <- read.csv(here::here("data/Samsung.csv"))
+reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
+```
