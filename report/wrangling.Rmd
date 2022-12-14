@@ -4,7 +4,8 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
@@ -374,4 +375,192 @@ smartphone_reviews <- rbind(Apple_reviews, Samsung_reviews)
 write.csv(smartphone_reviews,file= "smartphone_reviews.csv", row.names = FALSE)
 ```
 
+### **Language Detection** (*Text Classification*)
 
+```{r}
+Apple <- read.csv(here::here("data/Apple.csv"))
+Samsung <- read.csv(here::here("data/Samsung.csv"))
+smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
+
+# Importing 🤗 transformers into R session
+transformers <- reticulate::import("transformers")
+
+# This requires python package sentencepiece which is the tokenizer specific for this model
+sentencepiece <- reticulate::import("sentencepiece")
+
+# Model used: https://huggingface.co/eleldar/language-detection
+
+# Explicitly specifying the model you want
+detector <- transformers$pipeline(
+  task = "text-classification",
+  model = "eleldar/language-detection")
+
+# Samsung Languages
+# ------------------------------------------------------------------------------
+# Creating two empty data frames for table
+table_new <-data.frame()
+samsung_lang <- data.frame()
+
+# Detect the Languages of Samsung reviews
+outputs <- detector(Samsung$Reviews, max_length = 512L, truncation=TRUE) # takes around 7 min
+test <- data.frame(outputs)
+x <- seq(from = 1, to = 5184, by = 2)
+table_new <- data.frame(bind_cols(c(x = test[,x])))
+samsung_lang <- table_new %>% 
+  pivot_longer(cols = c(1:2592), names_to = "ID", values_to = "Language") %>% 
+  select(-ID)
+
+# Add Languages to the Samsung reviews
+Samsung <- cbind(Samsung, samsung_lang)
+
+# Apple Languages
+# ------------------------------------------------------------------------------
+# Creating two empty data frames for table
+table_new <-data.frame()
+apple_lang <- data.frame()
+
+# Detect the Languages of Apple reviews
+outputs <- detector(Apple$Reviews, max_length = 512L, truncation=TRUE) # takes around 20 min
+test <- data.frame(outputs)
+x <- seq(from = 1, to = 20102, by = 2)
+table_new <- data.frame(bind_cols(c(x = test[,x])))
+apple_lang <- table_new %>% 
+  pivot_longer(cols = c(1:10051), names_to = "ID", values_to = "Language") %>% 
+  select(-ID)
+
+# Add Languages to the Apple reviews
+Apple <- cbind(Apple, apple_lang)
+
+# # Creating two empty dataframes for table
+# table_new <-data.frame()
+# samsung_lang <- data.frame()
+# 
+# for (i in 1:51) {
+#   if (i == 1) {
+#   outputs <- detector(Samsung$Reviews[i:50], max_length = 512L, truncation=TRUE)
+#   test <- data.frame(outputs)
+#   x <- seq(from = 1, to = 100, by = 2)
+#   table_new <- data.frame(bind_cols(c(x = test[,x])))
+#   table_new <- table_new %>% 
+#     pivot_longer(cols = c(1:50), names_to = "ID", values_to = "Language") 
+#   samsung_lang <- rbind(samsung_lang,table_new)
+#   } else {
+#     outputs <- detector(Samsung$Reviews[(50*i-49):(50*i)], max_length = 512L,
+#                         truncation=TRUE)
+#     test <- data.frame(outputs)
+#     x <- seq(from = 1, to = 100, by = 2)
+#     table_new <- data.frame(bind_cols(c(x = test[,x])))
+#     table_new <- table_new %>% 
+#       pivot_longer(cols = c(1:50), names_to = "ID", values_to = "Language") 
+#     samsung_lang <- rbind(samsung_lang,table_new)
+#   }
+# }
+```
+
+### **Language Translation**
+
+```{r}
+
+# Explicitly specifying the model you want
+translator <- transformers$pipeline(
+  task = "translation_es_to_en",
+  model = "Helsinki-NLP/opus-mt-es-en")
+
+# Samsung Translations
+# -------------------------------------------------------------------------------------
+
+# Get rid of Languages with low amount reviews (ja, hi, de, el, sw, ur, fr)
+# English
+samsung_en <- Samsung %>% 
+  filter(Language == "en")
+
+# Spanish
+samsung_pt <- Samsung %>% 
+  filter(Language == "pt")
+samsung_pt <- samsung_pt[-c(1,12),] 
+samsung_pt$Language <- str_replace(samsung_pt$Language, "pt", "es")
+samsung_es <- Samsung %>% 
+  filter(Language == "es") %>% 
+  rbind(samsung_pt)
+
+# Create CSV file for EDA
+write.csv(samsung_es,file= "samsung_es.csv", row.names = FALSE)
+
+# Translate Spanish to English
+outputs <- translator(samsung_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 14 min 
+test <- data.frame(outputs)
+x <- seq(from = 1, to = 332, by = 1)
+table_new <- data.frame(bind_cols(c(x = test[,x])))
+samsung_es_en <- table_new %>% 
+  pivot_longer(cols = c(1:332), names_to = "ID", values_to = "Reviews") %>% 
+  select(-ID)
+
+# Create CSV file for EDA
+write.csv(samsung_es_en,file= "samsung_es_en.csv", row.names = FALSE)
+
+samsung_translated <- samsung_es %>% 
+  select(-c(Reviews, Language)) %>% 
+  cbind(samsung_es_en) %>% 
+  mutate(Language = "en")
+
+# Adding translations to English reviews
+samsung_en <- rbind(samsung_en, samsung_translated)
+
+# Generating clean Samsung Reviews (English version)
+Samsung <- samsung_en %>% 
+  select(-Language)
+
+# Create CSV file for EDA
+write.csv(Samsung,file= "Samsung_final.csv", row.names = FALSE)
+
+# Apple Translations
+# -------------------------------------------------------------------------------------
+
+# Get rid of Languages with low amount reviews"sw" "ur" "pt" "bg" "fr" "hi" "nl" "ru" "it" "de" "tr"
+
+# English
+apple_en <- Apple %>% 
+  filter(Language == "en")
+
+# Spanish
+apple_es <- Apple %>% 
+  filter(Language == "es") 
+
+# Create CSV file for EDA
+write.csv(apple_es,file= "apple_es.csv", row.names = FALSE)
+
+# Translate Spanish to English
+outputs <- translator(apple_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 40 min 
+test <- data.frame(outputs)
+x <- seq(from = 1, to = 1799, by = 1)
+table_new <- data.frame(bind_cols(c(x = test[,x])))
+apple_es_en <- table_new %>% 
+  pivot_longer(cols = c(1:1799), names_to = "ID", values_to = "Reviews") %>% 
+  select(-ID)
+
+# Create CSV file for EDA
+write.csv(apple_es_en,file= "apple_es_en.csv", row.names = FALSE)
+
+apple_translated <- apple_es %>% 
+  select(-c(Reviews, Language)) %>% 
+  cbind(apple_es_en) %>% 
+  mutate(Language = "en")
+
+# Adding translations to English reviews
+apple_en <- rbind(apple_en, apple_translated)
+
+# Generating clean Apple Reviews (English version)
+Apple <- apple_en %>% 
+  select(-Language)
+
+# Create CSV file for EDA
+write.csv(Apple,file= "Apple_final.csv", row.names = FALSE)
+```
+
+```{r}
+# Create master table with both brands
+smartphone_reviews_final <- rbind(Apple, Samsung)
+
+# Create CSV file
+write.csv(smartphone_reviews_final,file= "smartphone_reviews_final.csv", row.names = FALSE)
+```
