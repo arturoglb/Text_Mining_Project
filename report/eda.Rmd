@@ -1,0 +1,26 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+```{r}
+apple <- read.csv(here::here("data/Apple.csv"))
+Samsung <- read.csv(here::here("data/Samsung.csv"))
+Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
+```
+
+
+Creating a corpus
+```{r}
+Smartphone_reviews.cp <- corpus(Smartphone_reviews$Reviews)
+```
+
+Creating tokes
+```{r}
+Smartphone_reviews.tk <- tokens(
+  
+)
+```
+
