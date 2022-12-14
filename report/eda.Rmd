@@ -11,7 +11,7 @@ source(here::here("script/setup.R"))
 
 ## **Data Preparation**
 
-In this section, we will explain the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the methods we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observe on the wrangling.RMD file.
+In this section, we will explain the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the tasks we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observe on the wrangling.RMD file.
 
 ### **Data Retrieval**
 
@@ -110,6 +110,13 @@ both_samsung[1:6,] %>%
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
 
+After dealing with the steps explained above, we have transformed our files from having reviews with different languages to a final file with reviews in English. Thus, the number of reviews has slightly decreased, in the case of Apple from **12,965 obs to 12,712 obs**, and in the case of Samsung from **2,606 obs to 2,585**.
+
+```{r}
+Apple <- read.csv(here::here("data/Apple_final.csv"))
+Samsung <- read.csv(here::here("data/Samsung_final.csv"))
+Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+```
 
 ## **Exploratory Data Analysis**
 

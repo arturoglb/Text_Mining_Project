@@ -378,10 +378,6 @@ write.csv(smartphone_reviews,file= "smartphone_reviews.csv", row.names = FALSE)
 ### **Language Detection** (*Text Classification*)
 
 ```{r}
-Apple <- read.csv(here::here("data/Apple.csv"))
-Samsung <- read.csv(here::here("data/Samsung.csv"))
-smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
-
 # Importing 🤗 transformers into R session
 transformers <- reticulate::import("transformers")
 
