@@ -4,27 +4,96 @@ editor_options:
   chunk_output_type: inline
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
+## **Data Preparation**
+
+In this section, we will explain the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the methods we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observe on the wrangling.RMD file.
+
+### **Data Retrieval**
+
+During this section, we have scrapped from the US Amazon marketplace the smartphone reviews of Apple and Samsung phones. We have decided to retrieve the reviews of the eleventh, twelfth, and the thirteenth generations of Apple. Also, we have consider the Generation S20, 2S21, and S22 for Samsung. The phones concerning each of the generation with the amount of reviews are described as follows:
+
+* **Apple - 12,965 obs**
+    + Generation 11th - **10,276 obs**
+        * iPhone 11 - 5,414 obs
+        * iPhone 11 Pro - 2,844 obs
+        * iPhone 11 Pro Max - 2,414 obs
+    + Generation 12th - **2,239 obs**
+        * iPhone 12 - 975 obs
+        * iPhone 12 Mini - 779 obs
+        * iPhone 12 Pro - 376 obs
+        * iPhone 12 Pro Max - 109 obs
+    + Generation 13th - **450 obs**
+        * iPhone 13 - 152 obs
+        * iPhone 13 Mini - 146 obs
+        * iPhone 13 Pro - 68 obs
+        * iPhone 13 Pro Max - 84 obs
+
+* **Samsung - 2,606 obs**
+    + Generation S20 - **177 obs**
+        * Samsung Galaxy S20 FE - 63 obs
+        * Samsung Galaxy S20 Plus - 85 obs
+        * Samsung Galaxy Note S20 Ultra - 29 obs
+    + Generation S21 - **2,166 obs**
+        * Samsung Galaxy S21 FE - 1,775 obs
+        * Samsung Galaxy S21 Plus - 361 obs
+        * Samsung Galaxy S21 Ultra - 30 obs
+    + Generation S22 - **263 obs**
+        * Samsung Galaxy S22 - 47 obs
+        * Samsung Galaxy S22 Plus - 62 obs
+        * Samsung Galaxy S22 Ultra - 154 obs
+        
+From this numbers we can say that Apple mobile phones are more popular in the US than Samsung phones, as we observe that users are more willingly to review the phones from this brand. Furthermore, the Generation 11 of Apple had the largest amount of reviews compared to the rest with the iPhone 11 at the top of the list. 
+
+
+```{r}
+smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
+
+# Plot Table
+smartphone_reviews %>% 
+  head(10) %>%  
+  kable(caption = "Amazon US smartphones reviews - Apple and Samsung") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "300px")
+
+```
+
+### **Reviews Language Detection** (*Text Classification*)
+
+```{r}
+
+
+
+
+
+```
+
+### **Reviews Language Translation**
+
+```{r}
+
+
+
+
+
+```
+
+
 ## **Exploratory Data Analysis**
 
 ### Tokenization and Cleaning
-```{r}
-Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
-```
 
-
-Creating a corpus
 ```{r}
+Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
+#Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews$Reviews)
-```
 
-Creating tokens
-```{r}
+#Creating tokens
 Smartphone_reviews.tk <- tokens(
   Smartphone_reviews.cp,
   remove_punct = TRUE,
@@ -35,17 +104,14 @@ Smartphone_reviews.tk <- tokens(
 Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
   tokens_tolower() %>%
   tokens_remove(stop_words$word)
-```
 
-DTM; TF-IDF and global frequency
-```{r}
 ## Compute the DTM, TF-IDF and global frequencies
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
 Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
 Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 ```
 
-ploting frequency
+#### Plotting frequency
 
 ```{r}
 Smartphone_reviews.freq %>% 
@@ -59,7 +125,8 @@ Smartphone_reviews.freq %>%
   ylab("term")
 ```
 
-For document
+#### For document
+
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
@@ -73,7 +140,8 @@ Smartphone_reviews.dfm %>%
   facet_wrap(~document, ncol = 2, scales="free")
 ```
 
-plotting TF-IDF
+#### Plotting TF-IDF
+
 ```{r}
 Smartphone_reviews.tfidf %>% 
   tidy() %>% 
@@ -86,7 +154,7 @@ Smartphone_reviews.tfidf %>%
   facet_wrap(~document, ncol = 2)
 ```
 
-Maximum TF_IDF per document
+#### Maximum TF_IDF per document
 
 ```{r}
 Smartphone_reviews.tfidf %>% 
@@ -103,7 +171,9 @@ Smartphone_reviews.tfidf %>%
   xlab("Max TF-IDF") + 
   ylab("term")
 ```
-Document log frequency
+
+#### Document log frequency
+
 ```{r}
 Smartphone_reviews.freq %>% 
   ggplot(aes(x = log10(docfreq),

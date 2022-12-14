@@ -212,7 +212,7 @@ iphone11_reviews <- retrieve_reviews("https://www.amazon.com/Apple-iPhone-11-64G
 #Delete duplicates
 delete <- seq(1, length(iphone11_reviews$Reviews), 2)
 iphone11_reviews <-  iphone11_reviews[-delete, ]
-iphone11Pro_reviews <- iphone11_reviews %>%
+iphone11_reviews <- iphone11_reviews %>%
   data.frame() %>%
   rename("Reviews" = ".")  %>%
   mutate(Model = "iPhone 11") %>%
@@ -397,39 +397,39 @@ detector <- transformers$pipeline(
 
 # Samsung Languages
 # ------------------------------------------------------------------------------
-# Creating two empty data frames for table
-table_new <-data.frame()
-samsung_lang <- data.frame()
 
 # Detect the Languages of Samsung reviews
-outputs <- detector(Samsung$Reviews, max_length = 512L, truncation=TRUE) # takes around 7 min
+outputs <- detector(Samsung$Reviews, max_length = 512L, truncation=TRUE) # takes around 7 min to run
 test <- data.frame(outputs)
-x <- seq(from = 1, to = 5184, by = 2)
+x <- seq(from = 1, to = 5212, by = 2)
 table_new <- data.frame(bind_cols(c(x = test[,x])))
 samsung_lang <- table_new %>% 
-  pivot_longer(cols = c(1:2592), names_to = "ID", values_to = "Language") %>% 
+  pivot_longer(cols = c(1:2606), names_to = "ID", values_to = "Language") %>% 
   select(-ID)
 
 # Add Languages to the Samsung reviews
 Samsung <- cbind(Samsung, samsung_lang)
 
+# Create CSV file for EDA
+write.csv(Samsung,file= "samsung_class.csv", row.names = FALSE)
+
 # Apple Languages
 # ------------------------------------------------------------------------------
-# Creating two empty data frames for table
-table_new <-data.frame()
-apple_lang <- data.frame()
 
 # Detect the Languages of Apple reviews
-outputs <- detector(Apple$Reviews, max_length = 512L, truncation=TRUE) # takes around 20 min
+outputs <- detector(Apple$Reviews, max_length = 512L, truncation=TRUE) # takes around 26 min to run
 test <- data.frame(outputs)
-x <- seq(from = 1, to = 20102, by = 2)
+x <- seq(from = 1, to = 25928, by = 2)
 table_new <- data.frame(bind_cols(c(x = test[,x])))
 apple_lang <- table_new %>% 
-  pivot_longer(cols = c(1:10051), names_to = "ID", values_to = "Language") %>% 
+  pivot_longer(cols = c(1:12964), names_to = "ID", values_to = "Language") %>% 
   select(-ID)
 
 # Add Languages to the Apple reviews
 Apple <- cbind(Apple, apple_lang)
+
+# Create CSV file for EDA
+write.csv(Apple,file= "apple_class.csv", row.names = FALSE)
 
 # # Creating two empty dataframes for table
 # table_new <-data.frame()
@@ -461,6 +461,8 @@ Apple <- cbind(Apple, apple_lang)
 
 ```{r}
 
+# Model used: https://huggingface.co/Helsinki-NLP/opus-mt-es-en?text=Me+llamo+Wolfgang+y+vivo+en+Berlin
+
 # Explicitly specifying the model you want
 translator <- transformers$pipeline(
   task = "translation_es_to_en",
@@ -469,16 +471,12 @@ translator <- transformers$pipeline(
 # Samsung Translations
 # -------------------------------------------------------------------------------------
 
-# Get rid of Languages with low amount reviews (ja, hi, de, el, sw, ur, fr)
+# Get rid of Languages with low amount reviews (ja, hi, de, el, sw, ur, fr, pt)
 # English
 samsung_en <- Samsung %>% 
   filter(Language == "en")
 
 # Spanish
-samsung_pt <- Samsung %>% 
-  filter(Language == "pt")
-samsung_pt <- samsung_pt[-c(1,12),] 
-samsung_pt$Language <- str_replace(samsung_pt$Language, "pt", "es")
 samsung_es <- Samsung %>% 
   filter(Language == "es") %>% 
   rbind(samsung_pt)
@@ -487,12 +485,12 @@ samsung_es <- Samsung %>%
 write.csv(samsung_es,file= "samsung_es.csv", row.names = FALSE)
 
 # Translate Spanish to English
-outputs <- translator(samsung_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 14 min 
+outputs <- translator(samsung_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 14 min to run
 test <- data.frame(outputs)
-x <- seq(from = 1, to = 332, by = 1)
+x <- seq(from = 1, to = 335, by = 1)
 table_new <- data.frame(bind_cols(c(x = test[,x])))
 samsung_es_en <- table_new %>% 
-  pivot_longer(cols = c(1:332), names_to = "ID", values_to = "Reviews") %>% 
+  pivot_longer(cols = c(1:335), names_to = "ID", values_to = "Reviews") %>% 
   select(-ID)
 
 # Create CSV file for EDA
@@ -530,12 +528,12 @@ apple_es <- Apple %>%
 write.csv(apple_es,file= "apple_es.csv", row.names = FALSE)
 
 # Translate Spanish to English
-outputs <- translator(apple_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 40 min 
+outputs <- translator(apple_es$Reviews, max_length = 512L, truncation= TRUE) # takes around 1 hr to run
 test <- data.frame(outputs)
-x <- seq(from = 1, to = 1799, by = 1)
+x <- seq(from = 1, to = 2700, by = 1)
 table_new <- data.frame(bind_cols(c(x = test[,x])))
 apple_es_en <- table_new %>% 
-  pivot_longer(cols = c(1:1799), names_to = "ID", values_to = "Reviews") %>% 
+  pivot_longer(cols = c(1:2700), names_to = "ID", values_to = "Reviews") %>% 
   select(-ID)
 
 # Create CSV file for EDA
