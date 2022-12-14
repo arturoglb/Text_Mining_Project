@@ -8,3 +8,202 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
+
+
+```{r}
+# compute the Jaccard index matrix, the cosine matrix, and the Euclidean distances matrix.
+
+smartphone.jac <- textstat_simil(
+  Smartphone_reviews.tfidf,
+  method = "jaccard",
+  margin = "documents")
+
+smartphone.cos <- textstat_simil(
+  Smartphone_reviews.tfidf,
+  method = "cosine",
+  margin = "documents")
+
+smartphone.euc <- textstat_dist(
+  Smartphone_reviews.tfidf,
+  method = "euclidean",
+  margin = "documents")
+
+```
+
+
+```{r}
+# make a heatmap representation of the similarities between the documents.
+
+## Jaccard 
+smartphone.jac.matrix <- melt(as.matrix(smartphone.jac)) # Convert the object to matrix then to data frame 
+ggplot(data = smartphone.jac.matrix, 
+       mapping = aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white", 
+    midpoint = 0.5,
+    limit = c(0, 1),
+    name = "Jaccard") +
+  geom_tile() + xlab("") + ylab("")
+
+
+## Cosine
+smartphone.cos.matrix <- melt(as.matrix(smartphone.cos))
+ggplot(
+  data = smartphone.cos.matrix,
+  mapping = aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0.5,
+    limit = c(0, 1),
+    name = "Cosine") +
+  geom_tile() + xlab("") + ylab("")
+
+
+## Euclidean
+smartphone.euc.matrix <- melt(as.matrix(smartphone.euc))
+M <- max(smartphone.euc.matrix$value) # maximum distance
+smartphone.euc.matrix$value.std <- (M - smartphone.euc.matrix$value)/M 
+# conversion from distance to similarity in [0,1]
+ggplot(
+  data = smartphone.euc.matrix,
+  mapping = aes(x = Var1, 
+                y = Var2,
+                fill = value.std)) +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white", 
+    midpoint = 0.5,
+    limit = c(0, 1),
+    name = "Euclidean") +
+  geom_tile() + xlab("") + ylab("")
+```
+
+
+# Clustering of Documents
+
+
+```{r}
+smartphone.hc <- hclust(as.dist(smartphone.euc))
+## smartphone.hc <- hclust(as.dist(1 - smartphone.jac)) # use this line for Jaccard
+## smartphone.hc <- hclust(as.dist(1 - smartphone.cos)) # use this line for Cosine
+plot(smartphone.hc)
+```
+
+```{r}
+smartphone.clust <- cutree(smartphone.hc, k = 3)
+smartphone.clust
+
+
+smartphone.km <- kmeans(Smartphone_reviews.tfidf, centers = 3)
+smartphone.km$cluster
+```
+
+# Extract the five words that are the most used.
+
+```{r}
+data.frame(
+  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==1, ], 2, sum), decreasing = TRUE)[1:5]),
+  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==2, ], 2, sum), decreasing = TRUE)[1:5]),
+  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==3, ], 2, sum), decreasing = TRUE)[1:5])
+)
+
+
+data.frame(
+  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==1,], 2, sum), decreasing = TRUE)[1:5]),
+  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==2,], 2, sum), decreasing = TRUE)[1:5]),
+  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==3,], 2, sum), decreasing = TRUE)[1:5])
+)
+```
+
+
+
+## Similarities between Words
+
+```{r}
+smartphone.feat <- textstat_frequency(crude.tf) %>% #change this once R works
+  filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
+smartphone.feat$feature
+
+smartphone.word.cos <- textstat_simil(
+  crude.tf[, smartphone.feat$feature],
+  method = "cosine",
+  margin = "feature")
+smartphone.word.cos.matrix <- melt(as.matrix(smartphone.word.cos)) # Convert the object to matrix then to data frame 
+
+ggplot(data = smartphone.word.cos, aes(x=Var1, y=Var2, fill=value)) +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0.5,
+    limit = c(0, 1),
+    name = "Cosine") +
+  geom_tile() + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+    axis.text.y = element_text(size = 5)) +
+  xlab("") + 
+  ylab("")
+```
+
+
+
+#Clustering Words
+
+```{r}
+smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
+plot(smartphone.word.hc)
+```
+
+
+
+# Cooccurence
+
+```{r}
+smartphone.fcm <- fcm(Smartphone_reviews.tk, 
+                 window = 3, 
+                 tri = FALSE)
+smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2 ## make the co-occurrence matrix symmetrical
+```
+
+```{r}
+# heat map of the most frequent features
+
+smartphone.fcm.mat <- melt(
+  as.matrix(
+    smartphone.fcm[smartphone.feat$feature, smartphone.feat$feature]),
+  varnames = c("Var1", "Var2")) 
+ggplot(data = smartphone.fcm.mat, 
+       mapping = aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 140,
+    limit = c(0, 280),
+    name = "Co-occurrence") +
+  geom_tile() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+        axis.text.y = element_text(size = 5)) +
+  xlab("") +
+  ylab("")
+
+```
+
+```{r}
+# Produce clustering analysis. The co-occurrences are turned into dissimilarities before
+
+smartphone.inv_occ <- 
+  280 - as.matrix(
+    smartphone.fcm[smartphone.feat$feature, smartphone.feat$feature]) ## 280 is the max co-occurrence here
+
+smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ))
+plot(smartphone.occ.hc)
+```
+
+
