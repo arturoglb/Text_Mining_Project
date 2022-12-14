@@ -17,10 +17,25 @@ Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews$Reviews)
 ```
 
-Creating tokes
+Creating tokens
 ```{r}
 Smartphone_reviews.tk <- tokens(
-  
+  Smartphone_reviews.cp,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_separators = TRUE
 )
+Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
+  tokens_tolower() %>%
+  tokens_remove(stop_words$word)
+```
+
+DTM; TF-IDF and global frequency
+```{r}
+## Compute the DTM, TF-IDF and global frequencies
+Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
+Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
+Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 ```
 
