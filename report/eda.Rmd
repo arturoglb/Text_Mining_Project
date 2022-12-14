@@ -4,6 +4,7 @@ editor_options:
   chunk_output_type: inline
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
@@ -12,7 +13,6 @@ source(here::here("script/setup.R"))
 ## **Exploratory Data Analysis**
 
 ### Tokenization and Cleaning
-
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
 ```
