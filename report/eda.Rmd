@@ -4,27 +4,30 @@ editor_options:
   chunk_output_type: inline
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
+## **Data Preparation**
+
+### **Data Retrieval**
+
+
+
+
+
 ## **Exploratory Data Analysis**
 
 ### Tokenization and Cleaning
-```{r}
-Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
-```
 
-
-Creating a corpus
 ```{r}
+Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
+#Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews$Reviews)
-```
 
-Creating tokens
-```{r}
+#Creating tokens
 Smartphone_reviews.tk <- tokens(
   Smartphone_reviews.cp,
   remove_punct = TRUE,
@@ -35,17 +38,14 @@ Smartphone_reviews.tk <- tokens(
 Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
   tokens_tolower() %>%
   tokens_remove(stop_words$word)
-```
 
-DTM; TF-IDF and global frequency
-```{r}
 ## Compute the DTM, TF-IDF and global frequencies
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
 Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
 Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 ```
 
-ploting frequency
+#### Plotting frequency
 
 ```{r}
 Smartphone_reviews.freq %>% 
@@ -59,7 +59,8 @@ Smartphone_reviews.freq %>%
   ylab("term")
 ```
 
-For document
+#### For document
+
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
@@ -73,7 +74,8 @@ Smartphone_reviews.dfm %>%
   facet_wrap(~document, ncol = 2, scales="free")
 ```
 
-plotting TF-IDF
+#### Plotting TF-IDF
+
 ```{r}
 Smartphone_reviews.tfidf %>% 
   tidy() %>% 
@@ -86,7 +88,7 @@ Smartphone_reviews.tfidf %>%
   facet_wrap(~document, ncol = 2)
 ```
 
-Maximum TF_IDF per document
+#### Maximum TF_IDF per document
 
 ```{r}
 Smartphone_reviews.tfidf %>% 
@@ -103,7 +105,9 @@ Smartphone_reviews.tfidf %>%
   xlab("Max TF-IDF") + 
   ylab("term")
 ```
-Document log frequency
+
+#### Document log frequency
+
 ```{r}
 Smartphone_reviews.freq %>% 
   ggplot(aes(x = log10(docfreq),
