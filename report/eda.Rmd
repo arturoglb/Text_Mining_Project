@@ -174,13 +174,14 @@ This graph focused on the frequency of the 5 more common words used for each of 
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
-  top_n(20, count) %>% 
+  group_by(document) %>% 
+  top_n(5, count) %>% 
+  ungroup() %>% 
   ggplot(aes(x = term, y = count)) + 
-  geom_bar(stat = "Identity") + 
-  coord_flip() +
-  theme(axis.text.y = element_text(size = 3.5),
+  geom_col() + coord_flip() + 
+  theme(axis.text.y = element_text(size = 4),
         axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2)
+  facet_wrap(~document, ncol = 2, scales="free")
 ```
 
 #### Plotting maximum TF_IDF per document
@@ -219,3 +220,20 @@ Smartphone_reviews.freq %>%
   xlab("Document log-frequency") + 
   ylab("log-frequency")
 ```
+
+
+
+#### Lexical diversity
+
+We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample.
+
+```{r}
+Smartphone_reviews.dfm %>% textstat_lexdiv()
+
+crude.dfm %>% textstat_lexdiv() %>% 
+  ggplot(aes(reorder(document, -TTR),
+             TTR)) + 
+  geom_bar(stat="identity") +
+  xlab("Text")
+```
+
