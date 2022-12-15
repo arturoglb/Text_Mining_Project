@@ -174,17 +174,16 @@ This graph focused on the frequency of the 5 more common words used for each of 
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
-  group_by(document) %>% 
-  top_n(5, count) %>% 
-  ungroup() %>% 
+  top_n(20, count) %>% 
   ggplot(aes(x = term, y = count)) + 
-  geom_col() + coord_flip() + 
-  theme(axis.text.y = element_text(size = 4),
+  geom_bar(stat = "Identity") + 
+  coord_flip() +
+  theme(axis.text.y = element_text(size = 3.5),
         axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2, scales="free")
+  facet_wrap(~document, ncol = 2)
 ```
 
-#### Plotting TF-IDF
+#### Plotting maximum TF_IDF per document
 
 Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specif to model, it turns out that "entry" is what matter most for a consumers. Entry in the context of purchase might corresponds to leader price. 
 
@@ -205,25 +204,10 @@ Smartphone_reviews.tfidf %>%
 
 ```
 
-#### Maximum TF_IDF per document
-
-```{r}
-Smartphone_reviews.tfidf %>% 
-  tidy() %>%
-  group_by(term) %>%
-  summarize(count = max(count)) %>%
-  ungroup() %>% 
-  arrange(desc(count)) %>%
-  top_n(20, count) %>%
-  ggplot(aes(x=reorder(term, count),
-             y = count)) + 
-  geom_bar(stat = "identity") + 
-  coord_flip() +
-  xlab("Max TF-IDF") + 
-  ylab("term")
-```
 
 #### Document log frequency
+
+While this log frequency representation is quite messy due to the amount of document used, we can still distinguish the tokens found during the frequency plot representation. Indeed - phone, battery, screen - are the most common words used and are present in nearly every document. On the other hand, we observe - entry - having a lesser document frequency, meaning that it appears less often, while still maintaining a decent log-frequency implying that it is specif to some documents only. 
 
 ```{r}
 Smartphone_reviews.freq %>% 
