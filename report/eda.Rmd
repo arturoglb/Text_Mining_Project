@@ -251,8 +251,6 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
   xlab("Text")
 ```
 
-
-
 #### Keyness
 
 
@@ -274,12 +272,18 @@ speech.tok2 %>%
   textstat_keyness(target = "Samsung") %>%
   textplot_keyness()
 
+```
+
+
+#### Link between words
+
+```{r}
 ## Represent some links between terms
-speech.co <- fcm(speech.tok, 
+speech.co <- fcm(Smartphone_reviews.tk, 
                  context = "document",
                  tri = FALSE)
-index <- speech.freq %>% 
-  filter(frequency > 200) %>% 
+index <- Smartphone_reviews.freq %>% 
+  filter(frequency > 800) %>% 
   data.frame() %>% 
   select(feature)
 speech.co <- speech.co[index$feature, index$feature]
@@ -291,16 +295,7 @@ network <- graph_from_adjacency_matrix(
   diag = FALSE)
 plot(network,
      layout = layout_with_kk)
-```
 
-
-#### Link between words
-
-```{r}
-smartphone_reviews.co <- fcm(Smartphone_reviews.tk, 
-                context = "document", 
-                tri = FALSE)
-smartphone_reviews.co
 ```
 
 
