@@ -115,7 +115,7 @@ both_samsung[1:6,] %>%
 
 ### Tokenization and Cleaning
 
-Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each tokens will be assigned a word - and to get rid of non conforming formats. Thereby, we are removing in our corpus any punctuation; symbols; numbers; separator. To have a better analysis we also decided to remove "stop words" which correspond to parasite words - in other terms, words such as "a" "the" etc... that do not add value to the analysis. Finally instead of using a steeming method, we decided to proceed with a lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unuseful repetition with minor change - teach / teaching / taught will all be reduced to the root teach. Prio to continue with graphical represenation, we also compute the following informations:
+Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each tokens will be assigned a word - and to get rid of non conforming formats. Thereby, we are removing in our corpus any punctuation; symbols; numbers; separator. To have a better analysis we also decided to remove "stop words" which correspond to parasite words - in other terms, words such as "a" "the" etc... that do not add value to the analysis. Finally instead of using a steeming method, we decided to proceed with a lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unuseful repetition with minor change - teach / teaching / taught will all be reduced to the root teach. Prior to continue with graphical representation, we also compute the following information:
 
 *DTM - Document Term matrix corresponds to the number of time a specif terms will appear
 *TF-IDF -  Term Frequency Inverse Document frequency is a measure to quantify the relevance of a particular words in a document. 
@@ -174,14 +174,13 @@ This graph focused on the frequency of the 5 more common words used for each of 
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
-  group_by(document) %>% 
-  top_n(5, count) %>% 
-  ungroup() %>% 
+  top_n(6, count) %>% 
   ggplot(aes(x = term, y = count)) + 
-  geom_col() + coord_flip() + 
-  theme(axis.text.y = element_text(size = 4),
+  geom_bar(stat = "Identity") + 
+  coord_flip() +
+  theme(axis.text.y = element_text(size = 5),
         axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2, scales="free")
+  facet_wrap(~document, ncol = 2)
 ```
 
 #### Plotting maximum TF_IDF per document
@@ -222,15 +221,22 @@ Smartphone_reviews.freq %>%
 ```
 
 
+#### Words Cloud
+
+Another representation of the Document frequency matrix is through a word cloud, where the the most relevant words has the biggest size. From this cloud, we can identify - phone, battery, screen, iPhone, scratch, condition - as the most used words.
+
+```{r}
+textplot_wordcloud(Smartphone_reviews.dfm)
+```
+
 
 #### Lexical diversity
 
-We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample.
+We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample. A limitation of this representation is that the lexical diversity is dependent on the size of the sentence, in this case the reviews. Nonetheless it give us insight on how diverse the reviewers is in term of words used. The highest the TTR the more diverse the lexical is. 
 
 ```{r}
-Smartphone_reviews.dfm %>% textstat_lexdiv()
-
-crude.dfm %>% textstat_lexdiv() %>% 
+Smartphone_reviews.dfm %>% textstat_lexdiv() %>% 
+  head(10) %>%
   ggplot(aes(reorder(document, -TTR),
              TTR)) + 
   geom_bar(stat="identity") +
