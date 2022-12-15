@@ -132,7 +132,8 @@ Now that we have all our text in English solely, we can start processing our dat
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
 
 #Creating a corpus
-Smartphone_reviews.cp <- corpus(Smartphone_reviews$Reviews)
+Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
+               meta = list(source = "Smartphone reviews"))
 
 #Creating tokens
 Smartphone_reviews.tk <- tokens(
@@ -256,7 +257,9 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
 
 
 ```{r}
-test.tok <- tokens(corpus_subset(
+## Key terms of Trump vs Obama
+## Take a sub-corpus and clean it
+speech.tok2 <- tokens(corpus_subset(
   Smartphone_reviews.cp,
   Brand %in% c("Apple", "Samsung")),
   remove_punct = TRUE,
@@ -264,6 +267,30 @@ test.tok <- tokens(corpus_subset(
   remove_numbers = TRUE) %>% 
   tokens_tolower()  %>%  
   tokens_remove(pattern = stop_words$word)
+## Compute and show key terms
+speech.tok2 %>% 
+  dfm() %>% 
+  dfm_group(Brand) %>% 
+  textstat_keyness(target = "Samsung") %>%
+  textplot_keyness()
+
+## Represent some links between terms
+speech.co <- fcm(speech.tok, 
+                 context = "document",
+                 tri = FALSE)
+index <- speech.freq %>% 
+  filter(frequency > 200) %>% 
+  data.frame() %>% 
+  select(feature)
+speech.co <- speech.co[index$feature, index$feature]
+speech.co[speech.co <= 2000] <- 0
+speech.co[speech.co > 2000] <- 1
+network <- graph_from_adjacency_matrix(
+  speech.co,
+  mode = "undirected",
+  diag = FALSE)
+plot(network,
+     layout = layout_with_kk)
 ```
 
 
