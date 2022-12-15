@@ -122,6 +122,12 @@ Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
 
 ### Tokenization and Cleaning
 
+Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each tokens will be assigned a word - and to get rid of non conforming formats. Thereby, we are removing in our corpus any punctuation; symbols; numbers; separator. To have a better analysis we also decided to remove "stop words" which correspond to parasite words - in other terms, words such as "a" "the" etc... that do not add value to the analysis. Finally instead of using a steeming method, we decided to proceed with a lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unuseful repetition with minor change - teach / teaching / taught will all be reduced to the root teach. Prior to continue with graphical representation, we also compute the following information:
+
+*DTM - Document Term matrix corresponds to the number of time a specif terms will appear
+*TF-IDF -  Term Frequency Inverse Document frequency is a measure to quantify the relevance of a particular words in a document. 
+*Global Frequency corresponds to the frequency of each words for each document by rank.
+
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
 
@@ -140,6 +146,13 @@ Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
   tokens_tolower() %>%
   tokens_remove(stop_words$word)
 
+#lemmatization of words
+
+Smartphone_reviews.tk <- Smartphone_reviews.tk %>%  
+  tokens_replace(
+  pattern = hash_lemmas$token,
+  replacement = hash_lemmas$lemma)
+
 ## Compute the DTM, TF-IDF and global frequencies
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
 Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
@@ -147,6 +160,8 @@ Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 ```
 
 #### Plotting frequency
+
+Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as  we got our information from phones reviews on amazon, an interesting point came from the two most used words afterwards. Indeed, we might affirm, with this graphs that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
 
 ```{r}
 Smartphone_reviews.freq %>% 
@@ -162,34 +177,22 @@ Smartphone_reviews.freq %>%
 
 #### For document
 
+This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all throught out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
-  group_by(document) %>% 
-  top_n(5, count) %>% 
-  ungroup() %>% 
+  top_n(10, count) %>% 
   ggplot(aes(x = term, y = count)) + 
-  geom_col() + coord_flip() + 
-  theme(axis.text.y = element_text(size = 4),
-        axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2, scales="free")
-```
-
-#### Plotting TF-IDF
-
-```{r}
-Smartphone_reviews.tfidf %>% 
-  tidy() %>% 
-  top_n(20, count) %>% 
-  ggplot(aes(x = term, y = count)) + 
-  geom_col() + 
-  coord_flip() + 
-  theme(axis.text.y = element_text(size = 4),
+  geom_bar(stat = "Identity") + 
+  coord_flip() +
+  theme(axis.text.y = element_text(size = 8),
         axis.ticks.y = element_blank())  + 
   facet_wrap(~document, ncol = 2)
 ```
 
-#### Maximum TF_IDF per document
+#### Plotting maximum TF_IDF per document
+
+Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specif to model, it turns out that "entry" is what matter most for a consumers. Entry in the context of purchase might corresponds to leader price. 
 
 ```{r}
 Smartphone_reviews.tfidf %>% 
@@ -205,9 +208,13 @@ Smartphone_reviews.tfidf %>%
   coord_flip() +
   xlab("Max TF-IDF") + 
   ylab("term")
+
 ```
 
+
 #### Document log frequency
+
+While this log frequency representation is quite messy due to the amount of document used, we can still distinguish the tokens found during the frequency plot representation. Indeed - phone, battery, screen - are the most common words used and are present in nearly every document. On the other hand, we observe - entry - having a lesser document frequency, meaning that it appears less often, while still maintaining a decent log-frequency implying that it is specif to some documents only. 
 
 ```{r}
 Smartphone_reviews.freq %>% 
@@ -219,3 +226,55 @@ Smartphone_reviews.freq %>%
   xlab("Document log-frequency") + 
   ylab("log-frequency")
 ```
+
+
+#### Words Cloud
+
+Another representation of the Document frequency matrix is through a word cloud, where the the most relevant words has the biggest size. From this cloud, we can identify - phone, battery, screen, iPhone, scratch, condition - as the most used words.
+
+```{r}
+textplot_wordcloud(Smartphone_reviews.dfm)
+```
+
+
+#### Lexical diversity
+
+We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample. A limitation of this representation is that the lexical diversity is dependent on the size of the sentence, in this case the reviews. Nonetheless it give us insight on how diverse the reviewers is in term of words used. The highest the TTR the more diverse the lexical is. 
+
+```{r}
+Smartphone_reviews.dfm %>% textstat_lexdiv() %>% 
+  head(10) %>%
+  ggplot(aes(reorder(document, -TTR),
+             TTR)) + 
+  geom_bar(stat="identity") +
+  xlab("Text")
+```
+
+
+
+#### Keyness
+
+
+```{r}
+test.tok <- tokens(corpus_subset(
+  Smartphone_reviews.cp,
+  Brand %in% c("Apple", "Samsung")),
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE) %>% 
+  tokens_tolower()  %>%  
+  tokens_remove(pattern = stop_words$word)
+```
+
+
+#### Link between words
+
+```{r}
+smartphone_reviews.co <- fcm(Smartphone_reviews.tk, 
+                context = "document", 
+                tri = FALSE)
+smartphone_reviews.co
+```
+
+
+
