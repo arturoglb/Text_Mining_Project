@@ -154,7 +154,7 @@ Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 
 #### Plotting frequency
 
-Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as the we got our information from phones reviews, an interesting point came from the two most used words afterwards. Indeed, we might affirm, with this graphs that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
+Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as  we got our information from phones reviews on amazon, an interesting point came from the two most used words afterwards. Indeed, we might affirm, with this graphs that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
 
 ```{r}
 Smartphone_reviews.freq %>% 
@@ -170,6 +170,7 @@ Smartphone_reviews.freq %>%
 
 #### For document
 
+This graph focused on the frequency of the 5 more common words used for each of the documents available. 
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
@@ -185,16 +186,23 @@ Smartphone_reviews.dfm %>%
 
 #### Plotting TF-IDF
 
+Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specif to model, it turns out that "entry" is what matter most for a consumers. Entry in the context of purchase might corresponds to leader price. 
+
 ```{r}
 Smartphone_reviews.tfidf %>% 
-  tidy() %>% 
-  top_n(20, count) %>% 
-  ggplot(aes(x = term, y = count)) + 
-  geom_col() + 
-  coord_flip() + 
-  theme(axis.text.y = element_text(size = 4),
-        axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2)
+  tidy() %>%
+  group_by(term) %>%
+  summarize(count = max(count)) %>%
+  ungroup() %>% 
+  arrange(desc(count)) %>%
+  top_n(20, count) %>%
+  ggplot(aes(x=reorder(term, count),
+             y = count)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() +
+  xlab("Max TF-IDF") + 
+  ylab("term")
+
 ```
 
 #### Maximum TF_IDF per document
