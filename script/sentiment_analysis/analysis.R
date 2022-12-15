@@ -8,11 +8,20 @@ source(here::here("script/sentiment_analysis/value_function.R"))
 # # sentimentr packages
 
 # # Read data
-apple <- read.csv(here::here("data/Apple.csv"))
-samsung <- read.csv(here::here("data/Samsung.csv"))
-reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
+all_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+apple <- read.csv(here::here("data/Apple_final.csv"))
+samsung <- read.csv(here::here("data/Samsung_final.csv"))
 
 # # Unnest tokens
+all_reviews_token <- all_reviews %>% 
+  mutate(review_id = seq(1:nrow(all_reviews))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                input = "Reviews",
+                to_lower = TRUE,
+                strip_punct = TRUE,
+                strip_numeric = TRUE)
+  
 apple_token <- apple %>% 
   mutate(review_id = seq(1:nrow(apple))) %>% 
   relocate(review_id, .before = "Brand") %>% 
@@ -22,23 +31,124 @@ apple_token <- apple %>%
                  strip_punct = TRUE,
                  strip_numeric = TRUE)
 
-# # Get sentiment analysis
+samsung_token <- samsung %>% 
+  mutate(review_id = seq(1:nrow(samsung))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                input = "Reviews",
+                to_lower = TRUE,
+                strip_punct = TRUE,
+                strip_numeric = TRUE)
+
+# # Get sentiment analysis: Apple vs. Samsung
 # Sentiment based using "nrc" dictionary
-apple_sentiment <- sentiment_function(apple_token, "review_id", "sentiment")
+for (i in list(apple_token, samsung_token)){
+  # Perform the sentiment analysis
+  sentiment_analysis <- sentiment_function(i, "review_id", "sentiment")
+  
+  # Print the plot
+  print(ggplot(tibble(sentiment = names(colSums(sentiment_analysis)),
+                sum_value = colSums(sentiment_analysis)),
+         aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
+    geom_col() +
+    ggtitle("Sentiment analysis results (nrc dictionary)", subtitle = i$Brand[1]) +
+    ylab("Number of tokens") +
+    xlab("Sentiment"))
+}
 
-ggplot(tibble(sentiment = names(colSums(apple_sentiment)),
-              sum_value = colSums(apple_sentiment)),
-       aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
-  geom_col()
+# Value based using "afinn" dictionary and "sentimentr"
+index <- 1
+data_list <- list(apple, samsung)
+for (i in list(apple_token, samsung_token)){
+  # Perform the sentiment value analysis
+  value_analysis <- value_function(data_list[[index]]$Reviews, i, review_id, value)
+  
+  # Print the plot
+  print(ggplot(value_analysis, aes(y = value, fill = variable)) +
+      geom_boxplot() +
+      ylab("Average sentiment value") +
+      ggtitle("Sentiment analysis results (afinn dictionary and sentimentr)", subtitle=i$Brand[1]) +
+      scale_y_continuous(breaks = seq(0,5,0.2), limits = c(0,5)) +
+      guides(fill=guide_legend("Sentiment method")))
+  
+  # Increment index
+  index <- index + 1
+}
 
-# Value based using "afinn" dictionary and sentimentr
-apple_value <- value_function(apple$Reviews, apple_token, review_id, value)
+# # Graph per model
+# # Perform to the sentiment and value analysis per model
+# for (i in unique(all_reviews$Model)){
+#   # Store model name
+#   model_name <- i
+#   
+#   # Keep data per model only
+#   model_data <- all_reviews %>% 
+#     filter(Model == model_name)
+#   model_token <- all_reviews_token %>% 
+#     filter(Model == model_name)
+#   
+#   # Store brand name
+#   brand_name <- model_data$Brand[1]
+#   
+#   # Perform the sentiment analysis
+#   sentiment_analysis <- sentiment_function(model_token, "review_id", "sentiment")
+#   
+#   # Print the plot
+#   print(ggplot(tibble(sentiment = names(colSums(sentiment_analysis)),
+#                       sum_value = colSums(sentiment_analysis)),
+#                aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
+#           geom_col() +
+#           ggtitle("Sentiment analysis results (nrc dictionary)", subtitle = paste0(brand_name, ": ", model_name)) +
+#           ylab("Number of tokens") +
+#           xlab("Sentiment"))
+#   
+#   # Perform the sentiment value analysis
+#   value_analysis <- value_function(model_data$Reviews, model_token, review_id, value)
+#   
+#   # Print the plot
+#   print(ggplot(value_analysis, aes(y = value, fill = variable)) +
+#           geom_boxplot() +
+#           ylab("Average sentiment value") +
+#           ggtitle("Sentiment analysis results (afinn dictionary and sentimentr)", subtitle = paste0(brand_name, ": ", model_name)) +
+#           scale_y_continuous(breaks = seq(0,5,0.2), limits = c(0,5)) +
+#           guides(fill=guide_legend("Sentiment method")))+
+#     theme(axis.ticks.x = element_blank(),
+#           axis.text.x = element_blank())
+# }
 
-ggplot(melt(apple_value, id.vars = "review_id"), aes(y = value, fill = variable)) +
-  geom_boxplot() +
-  ylab("Average sentiment value") +
-  ggtitle("Sentiment distribution") + 
-  guides(fill=guide_legend("Sentiment method"))
+# # Facet graph of all models
+# Perform sentiment analysis per model 
+sentiment_per_model <- all_reviews_token %>%
+  group_by(Model) %>%
+  do(data.frame(val=sentiment_function(., "review_id", "sentiment"))) %>% 
+  group_by(Model, val.Var2) %>% 
+  summarise(sum_value = sum(val.Freq))
 
+ggplot(sentiment_per_model, aes(x = reorder(val.Var2, -sum_value), y = sum_value)) +
+  geom_col() +
+  ggtitle("Sentiment analysis results (nrc dictionary)", subtitle = "Per model") +
+  ylab("Number of tokens") +
+  xlab("Sentiment") +
+  facet_wrap(vars(Model), scales = "free_y")
 
+# Perform the sentiment value analysis per model
+afinn_per_model <- all_reviews_token %>% 
+  group_by(Model) %>% 
+  do(data.frame(val=value_function(data_token=., id_column = review_id, value_column = value)))
 
+sentimentr_per_model <- all_reviews %>%
+  group_by(Model) %>%
+  do(data.frame(val=value_function(data_text=.))) 
+
+sentiment_value_per_model <- rbind(afinn_per_model, sentimentr_per_model)
+
+# Print the plot
+ggplot(sentiment_value_per_model, aes(y = val.value, fill = val.variable)) +
+        geom_boxplot() +
+        ylab("Average sentiment value") +
+        ggtitle("Sentiment analysis results (afinn dictionary and sentimentr)", subtitle = "Per model") +
+        scale_y_continuous(breaks = seq(0,5,0.5), limits = c(0,5)) +
+        guides(fill=guide_legend("Sentiment method"))+
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  facet_wrap(vars(Model))
