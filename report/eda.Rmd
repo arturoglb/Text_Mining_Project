@@ -170,15 +170,15 @@ Smartphone_reviews.freq %>%
 
 #### For document
 
-This graph focused on the frequency of the 5 more common words used for each of the documents available. 
+This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all throught out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
-  top_n(6, count) %>% 
+  top_n(10, count) %>% 
   ggplot(aes(x = term, y = count)) + 
   geom_bar(stat = "Identity") + 
   coord_flip() +
-  theme(axis.text.y = element_text(size = 5),
+  theme(axis.text.y = element_text(size = 8),
         axis.ticks.y = element_blank())  + 
   facet_wrap(~document, ncol = 2)
 ```
@@ -242,4 +242,32 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
   geom_bar(stat="identity") +
   xlab("Text")
 ```
+
+
+
+#### Keyness
+
+
+```{r}
+test.tok <- tokens(corpus_subset(
+  Smartphone_reviews.cp,
+  Brand %in% c("Apple", "Samsung")),
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE) %>% 
+  tokens_tolower()  %>%  
+  tokens_remove(pattern = stop_words$word)
+```
+
+
+#### Link between words
+
+```{r}
+smartphone_reviews.co <- fcm(Smartphone_reviews.tk, 
+                context = "document", 
+                tri = FALSE)
+smartphone_reviews.co
+```
+
+
 
