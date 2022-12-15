@@ -253,11 +253,25 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
 
 #### Keyness
 
-To continue with our analysis we decided to applied a Chi-square test of independence between Apple's and Samsung's reviews.
+To continue with our analysis we decided to applied a Chi-square test of independence between Apple's and Samsung's reviews. The purpose of this test is to compare term from a set of document to another, in this case we want to put in perspective terms used from one consumers base to an others. We create a plot with the keyness results, we also added for reference two tables containing the 10 first values from the Chi-square test for both Samsung and Apple as target. 
 
-**Samsung**
+From the graph, we can see that both reviews will have as most common words used their respective brand. The main difference lays in the following exclusive words used. It seems that for  Samsung most of the term are related to other models (Apple as reference). Meanwhile, if Apple becomes the target (Samsung as reference), it appears that the most common terms used are - condition, and scratches.
 
-**Apple**
+Our intuition behind this pattern, could be due for Samsung to the amount of product they proposed, thus reviewers have a larger set of comparison when reviewing:
+
+* Galaxy-S
+* Galaxy-A
+* Galaxy-Z
+* Galaxy-Foldables
+* Galaxy-Notes
+
+as for Apple:
+
+* Iphone 
+* Iphone mini
+* Iphone Pro
+* Iphone SE
+
 
 
 ```{r}
@@ -272,13 +286,18 @@ Smartphone_reviews.tk2 <- tokens(corpus_subset(
   tokens_tolower()  %>%  
   tokens_remove(pattern = stop_words$word)
 
-Smartphone_reviews.dfm2 <- dfm(Smartphone_reviews.tk2)
+## table
+Smartphone_reviews.tk2 %>% 
+  dfm() %>% 
+  dfm_group(Brand) %>% 
+  textstat_keyness(target = "Samsung") %>%
+  head(10)
 
-summary(Smartphone_reviews.cp)
-## showing terms
-
-tstat1 <- textstat_keyness(Smartphone_reviews.dfm2, target = "Samsung")
-head(tstat1, 10)
+Smartphone_reviews.tk2 %>% 
+  dfm() %>% 
+  dfm_group(Brand) %>% 
+  textstat_keyness(target = "Apple") %>%
+  head(10)
 
 ## Compute and show key terms
 Smartphone_reviews.tk2 %>% 
