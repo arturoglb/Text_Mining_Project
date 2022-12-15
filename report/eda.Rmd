@@ -154,6 +154,8 @@ Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
 
 #### Plotting frequency
 
+Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as the we got our information from phones reviews, an interesting point came from the two most used words afterwards. Indeed, we might affirm, with this graphs that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
+
 ```{r}
 Smartphone_reviews.freq %>% 
   top_n(20, frequency) %>%
