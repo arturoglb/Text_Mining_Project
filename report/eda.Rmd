@@ -253,6 +253,12 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
 
 #### Keyness
 
+To continue with our analysis we decided to applied a Chi-square test of independence between Apple's and Samsung's reviews.
+
+**Samsung**
+
+**Apple**
+
 
 ```{r}
 ## Key terms of Apple vs Samsung
@@ -265,6 +271,15 @@ Smartphone_reviews.tk2 <- tokens(corpus_subset(
   remove_numbers = TRUE) %>% 
   tokens_tolower()  %>%  
   tokens_remove(pattern = stop_words$word)
+
+Smartphone_reviews.dfm2 <- dfm(Smartphone_reviews.tk2)
+
+summary(Smartphone_reviews.cp)
+## showing terms
+
+tstat1 <- textstat_keyness(Smartphone_reviews.dfm2, target = "Samsung")
+head(tstat1, 10)
+
 ## Compute and show key terms
 Smartphone_reviews.tk2 %>% 
   dfm() %>% 
