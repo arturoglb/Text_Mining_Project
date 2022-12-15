@@ -115,6 +115,12 @@ both_samsung[1:6,] %>%
 
 ### Tokenization and Cleaning
 
+Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each tokens will be assigned a word - and to get rid of non conforming formats. Thereby, we are removing in our corpus any punctuation; symbols; numbers; separator. To have a better analysis we also decided to remove "stop words" which correspond to parasite words - in other terms, words such as "a" "the" etc... that do not add value to the analysis. Finally instead of using a steeming method, we decided to proceed with a lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unuseful repetition with minor change - teach / teaching / taught will all be reduced to the root teach. Prio to continue with graphical represenation, we also compute the following informations:
+
+*DTM - Document Term matrix corresponds to the number of time a specif terms will appear
+*TF-IDF -  Term Frequency Inverse Document frequency is a measure to quantify the relevance of a particular words in a document. 
+*Global Frequency corresponds to the frequency of each words for each document by rank.
+
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
 
@@ -132,6 +138,13 @@ Smartphone_reviews.tk <- tokens(
 Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
   tokens_tolower() %>%
   tokens_remove(stop_words$word)
+
+#lemmatization of words
+
+Smartphone_reviews.tk <- Smartphone_reviews.tk %>%  
+  tokens_replace(
+  pattern = hash_lemmas$token,
+  replacement = hash_lemmas$lemma)
 
 ## Compute the DTM, TF-IDF and global frequencies
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
