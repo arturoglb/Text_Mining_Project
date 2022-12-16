@@ -10,6 +10,47 @@ source(here::here("script/setup.R"))
 
 
 ```{r}
+Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
+#Creating a corpus
+Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
+               meta = list(source = "Smartphone reviews"))
+summary(Smartphone_reviews.cp) %>% head(10)
+
+# Creating Corpus by Group Model
+Smartphone_reviews.cp.group <- corpus_group(Smartphone_reviews.cp, groups = Model)
+summary(Smartphone_reviews.cp.group) 
+
+#Creating tokens
+Smartphone_reviews.tk <- tokens(
+  Smartphone_reviews.cp,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_separators = TRUE) %>%
+  tokens_tolower() %>%
+  tokens_remove(stop_words$word)
+
+#lemmatization of words
+
+Smartphone_reviews.tk <- Smartphone_reviews.tk %>%  
+  tokens_replace(
+  pattern = hash_lemmas$token,
+  replacement = hash_lemmas$lemma)
+
+## Compute the DTM, TF-IDF and global frequencies
+Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
+Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
+Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
+
+## Compute the DTM, TF-IDF and global frequencies per group
+Smartphone_reviews.dfm.group <- dfm_group(Smartphone_reviews.dfm, groups = Model)
+Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)  
+Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
+```
+
+
+```{r}
 # compute the Jaccard index matrix, the cosine matrix, and the Euclidean distances matrix.
 # smartphone.jac <- textstat_simil(
 #   Smartphone_reviews.tfidf,
@@ -22,12 +63,13 @@ source(here::here("script/setup.R"))
 #   margin = "documents")
 
 smartphone.euc <- textstat_dist(
-  Smartphone_reviews.tfidf,
+  Smartphone_reviews.tfidf.group,
   method = "euclidean",
   margin = "documents")
 
 ```
 
+To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews. Since we are taking the Euclidean Distance, we will first need to transform the distances to similarities bounded between 0-1. 
 
 ```{r}
 # make a heatmap representation of the similarities between the documents.
@@ -63,8 +105,9 @@ smartphone.euc <- textstat_dist(
 
 ## Euclidean
 smartphone.euc.matrix <- melt(as.matrix(smartphone.euc))
-M <- max(smartphone.euc.matrix$value) # maximum distance
-smartphone.euc.matrix$value.std <- (M - smartphone.euc.matrix$value)/M 
+max_dist <- max(smartphone.euc.matrix$value) # to get the maximum distance
+smartphone.euc.matrix$value.std <- (max_dist - smartphone.euc.matrix$value)/max_dist 
+
 # conversion from distance to similarity in [0,1]
 ggplot(
   data = smartphone.euc.matrix,
@@ -79,6 +122,7 @@ ggplot(
     limit = c(0, 1),
     name = "Euclidean") +
   geom_tile() + xlab("") + ylab("")
+
 ```
 
 
@@ -93,28 +137,33 @@ plot(smartphone.hc)
 ```
 
 ```{r}
-smartphone.clust <- cutree(smartphone.hc, k = 3)
+
+smartphone.clust <- cutree(smartphone.hc, k = 4)
 smartphone.clust
 
 
-smartphone.km <- kmeans(Smartphone_reviews.tfidf, centers = 3)
+smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
-# Extract the five words that are the most used.
+
+
+# Extract the ten words that are the most used.
 
 ```{r}
 data.frame(
-  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==1, ], 2, sum), decreasing = TRUE)[1:5]),
-  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==2, ], 2, sum), decreasing = TRUE)[1:5]),
-  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.clust==3, ], 2, sum), decreasing = TRUE)[1:5])
+  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==1, ], 2, sum), decreasing = TRUE)[1:10]),
+  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==2, ], 2, sum), decreasing = TRUE)[1:10]),
+  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==3, ], 2, sum), decreasing = TRUE)[1:10]), 
+  Clust.4 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==4, ], 2, sum), decreasing = TRUE)[1:10])
 )
 
 
 data.frame(
-  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==1,], 2, sum), decreasing = TRUE)[1:5]),
-  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==2,], 2, sum), decreasing = TRUE)[1:5]),
-  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf[smartphone.km$cluster==3,], 2, sum), decreasing = TRUE)[1:5])
+  Clust.1 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==1,], 2, sum), decreasing = TRUE)[1:10]),
+  Clust.2 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==2,], 2, sum), decreasing = TRUE)[1:10]),
+  Clust.3 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==3,], 2, sum), decreasing = TRUE)[1:10]),
+  Clust.4 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==4,], 2, sum), decreasing = TRUE)[1:10])
 )
 ```
 
@@ -123,17 +172,17 @@ data.frame(
 ## Similarities between Words
 
 ```{r}
-smartphone.feat <- textstat_frequency(crude.tf) %>% #change this once R works
+smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm) %>% #change this once R works
   filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
 smartphone.feat$feature
 
 smartphone.word.cos <- textstat_simil(
-  crude.tf[, smartphone.feat$feature],
+  Smartphone_reviews.dfm[, smartphone.feat$feature],
   method = "cosine",
   margin = "feature")
 smartphone.word.cos.matrix <- melt(as.matrix(smartphone.word.cos)) # Convert the object to matrix then to data frame 
 
-ggplot(data = smartphone.word.cos, aes(x=Var1, y=Var2, fill=value)) +
+ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
   scale_fill_gradient2(
     low = "blue",
     high = "red",
