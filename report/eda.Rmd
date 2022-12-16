@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
@@ -179,6 +179,7 @@ Smartphone_reviews.freq %>%
 #### For document
 
 This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all throught out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
+
 ```{r}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
@@ -271,8 +272,6 @@ as for Apple:
 * Iphone mini
 * Iphone Pro
 * Iphone SE
-
-
 
 ```{r}
 ## Key terms of Apple vs Samsung

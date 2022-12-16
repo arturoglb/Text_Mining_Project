@@ -13,6 +13,6 @@ text-align: justify}
 </style>
 
 
-```{r child = c('intro.Rmd', 'eda.Rmd', 'analysis.Rmd', 'conclusion.Rmd')}
+```{r child = c('intro.Rmd', 'eda.Rmd', 'sentiment_analysis.Rmd', 'unsupervised_analysis.Rmd', 'supervised_learning', 'conclusion.Rmd')}
 ```
 
