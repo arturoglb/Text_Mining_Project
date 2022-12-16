@@ -11,7 +11,7 @@ source(here::here("script/setup.R"))
 
 ## **Data Preparation**
 
-In this section, we will explain the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the tasks we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observe on the wrangling.RMD file.
+In this section, we will explain the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the tasks we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observed on the scrapping.RMD file.
 
 ### **Data Retrieval**
 
@@ -112,12 +112,6 @@ both_samsung[1:6,] %>%
 
 After dealing with the steps explained above, we have transformed our files from having reviews with different languages to a final file with reviews in English. Thus, the number of reviews has slightly decreased, in the case of Apple from **12,965 obs to 12,712 obs**, and in the case of Samsung from **2,606 obs to 2,585**.
 
-```{r}
-Apple <- read.csv(here::here("data/Apple_final.csv"))
-Samsung <- read.csv(here::here("data/Samsung_final.csv"))
-Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
-```
-
 ## **Exploratory Data Analysis**
 
 ### Tokenization and Cleaning
@@ -130,10 +124,19 @@ Now that we have all our text in English solely, we can start processing our dat
 
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+row.name <- as.vector(Smartphone_reviews$Model)
+row.name <- paste(row.name, "_", sep = "")
+row.name <- paste0(row.name, 1:15297)
+row.names(Smartphone_reviews) <- row.name
 
 #Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
                meta = list(source = "Smartphone reviews"))
+summary(Smartphone_reviews.cp) %>% head(10)
+
+# Creating Corpus by Group Model
+Smartphone_reviews.cp.group <- corpus_group(Smartphone_reviews.cp, groups = Model)
+summary(Smartphone_reviews.cp.group) 
 
 #Creating tokens
 Smartphone_reviews.tk <- tokens(
@@ -141,9 +144,7 @@ Smartphone_reviews.tk <- tokens(
   remove_punct = TRUE,
   remove_symbols = TRUE,
   remove_numbers = TRUE,
-  remove_separators = TRUE
-)
-Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
+  remove_separators = TRUE) %>%
   tokens_tolower() %>%
   tokens_remove(stop_words$word)
 
@@ -158,6 +159,12 @@ Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
 Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
 Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
+
+## Compute the DTM, TF-IDF and global frequencies per group
+Smartphone_reviews.dfm.group <- dfm_group(Smartphone_reviews.dfm, groups = Model)
+Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)  
+Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
+
 ```
 
 #### Plotting frequency
@@ -178,7 +185,7 @@ Smartphone_reviews.freq %>%
 
 #### For document
 
-This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all throught out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
+This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all through out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
 
 ```{r}
 Smartphone_reviews.dfm %>% 
@@ -190,13 +197,26 @@ Smartphone_reviews.dfm %>%
   theme(axis.text.y = element_text(size = 8),
         axis.ticks.y = element_blank())  + 
   facet_wrap(~document, ncol = 2)
+
+# Plot per document grouped 
+Smartphone_reviews.tfidf.group %>% 
+  tidy() %>% 
+  top_n(10, count) %>% 
+  ggplot(aes(x = term, y = count)) + 
+  geom_bar(stat = "Identity") + 
+  coord_flip() +
+  theme(axis.text.y = element_text(size = 8),
+        axis.ticks.y = element_blank())  + 
+  facet_wrap(~document, ncol = 2)
+
 ```
 
-#### Plotting maximum TF_IDF per document
+#### Plotting maximum TF_IDF per term and document
 
 Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specif to model, it turns out that "entry" is what matter most for a consumers. Entry in the context of purchase might corresponds to leader price. 
 
-```{r}
+```{r, fig.width=10}
+#Plotting maximum TF_IDF per term
 Smartphone_reviews.tfidf %>% 
   tidy() %>%
   group_by(term) %>%
@@ -211,6 +231,18 @@ Smartphone_reviews.tfidf %>%
   xlab("Max TF-IDF") + 
   ylab("term")
 
+
+# Plotting maximum TF_IDF per document grouped
+
+Smartphone_reviews.tfidf.group %>% 
+  tidy() %>%
+  group_by(document) %>%
+  slice_max(count, n = 5) %>%
+  ungroup() %>%
+  ggplot(aes(count, reorder_within(term, count, document), fill = document)) +
+  geom_col(show.legend = FALSE) + scale_y_reordered() +
+  facet_wrap(~document, ncol = 4, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
 ```
 
 
@@ -249,7 +281,20 @@ Smartphone_reviews.dfm %>% textstat_lexdiv() %>%
   ggplot(aes(reorder(document, -TTR),
              TTR)) + 
   geom_bar(stat="identity") +
-  xlab("Text")
+  xlab("Text") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
+        strip.text = element_text(size=7)) 
+
+# Lexical diversity per document(Model grouped)
+Smartphone_reviews.dfm.group %>% textstat_lexdiv() %>% 
+  head(10) %>%
+  ggplot(aes(reorder(document, -TTR),
+             TTR)) + 
+  geom_bar(stat="identity") +
+  xlab("Text") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
+        strip.text = element_text(size=7)) 
+
 ```
 
 #### Keyness
@@ -307,7 +352,6 @@ Smartphone_reviews.tk2 %>%
 
 ```
 
-
 #### Link between words
 
 To get an idea of the relationship between words - what are the most common combination - we decided to present a visual representation of those links. From the following graph we interpret that the majority of the most common words are linked directly with the term "phone" - this of course makes sense as we are working on phones reviews. It can be noted however that on the outer reach of this plot terms such as - perfect, excellent, recommend, happy - are reviews that mostly appears only with one token. This could explain the reason why on this graph these terms do not appear with links to others tokens. 
@@ -333,5 +377,185 @@ plot(network,
 
 ```
 
+
+### Topic Modeling
+
+#### LSA on TF (DFM)
+
+```{r, warning=FALSE}
+Smartphone_reviews.lsa <- textmodel_lsa(
+  x = Smartphone_reviews.dfm.group,
+  nd = 10) 
+
+head(Smartphone_reviews.lsa$docs)
+head(Smartphone_reviews.lsa$features)
+
+n.terms <- 5
+
+## For Dimension 2
+w.order <- sort(Smartphone_reviews.lsa$features[, 2], decreasing = TRUE)
+w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+## For Dimension 3
+w.order <- sort(Smartphone_reviews.lsa$features[,3], decreasing = TRUE)
+w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.top2
+w.top3
+
+w.subset <- Smartphone_reviews.lsa$features[
+    c(unique(c(names(w.top2), names(w.top3)))), 2:3]
+
+biplot(
+  y = Smartphone_reviews.lsa$docs[, 2:3],
+  x = w.subset,
+  col = c("black","red"),
+  cex = c(0.8, 0.8),
+  xlab = "Dim 2",
+  ylab = "Dim 3")
+```
+
+#### LSA on TF (TF-IDF)
+
+```{r, warning=FALSE}
+Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
+                                         nd = 10) 
+head(Smartphone_reviews.lsa2$docs)
+head(Smartphone_reviews.lsa2$features)
+Smartphone_reviews.lsa2$sk
+
+n.terms <- 5
+w.order <- sort(Smartphone_reviews.lsa2$features[,2], decreasing = TRUE)
+w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.order <- sort(Smartphone_reviews.lsa2$features[,3], decreasing = TRUE)
+w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.subset <- Smartphone_reviews.lsa2$features[c(unique(c(names(w.top2), names(w.top3)))),2:3]
+biplot(
+  y = Smartphone_reviews.lsa2$docs[,2:3],
+  x = w.subset,
+  col = c("black", "red"),
+  cex = c(0.8, 0.8),
+  xlab = "Dim 2",
+  ylab="Dim 3")
+```
+
+
+#### LDA Using quanteda
+
+```{r}
+# Term-Topic Analysis
+library(seededlda)
+
+set.seed(123)
+Smartphone_reviews.lda <- textmodel_lda(x = Smartphone_reviews.dfm.group, k = 5)
+seededlda::terms(Smartphone_reviews.lda, 5)
+seededlda::topics(Smartphone_reviews.lda)
+seededlda::topics(Smartphone_reviews.lda) %>% table()
+
+# Term-Topic Analysis
+phi.long <- melt(
+  Smartphone_reviews.lda$phi,
+  varnames = c("Topic", "Term"),
+  value.name = "Phi") 
+
+p1 <- phi.long %>% 
+  group_by(Topic) %>% 
+  top_n(10, Phi) %>% 
+  ggplot(aes(reorder_within(Term, Phi, Topic), Phi, fill=Topic)) + 
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~ Topic, scales = "free_y") +
+  scale_x_reordered() + 
+  xlab("Term") + 
+  theme(
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(size = 8))
+
+# Topic-Document Analysis
+
+set.seed(123)
+theta.long <- melt(
+  Smartphone_reviews.lda$theta,
+  varnames = c("Doc", "Topic"),
+  value.name = "Theta")
+
+p2 <- theta.long %>% 
+  group_by(Topic) %>% 
+  top_n(10, Theta) %>% 
+  ggplot(aes(reorder_within(Doc, Theta, Topic), Theta, fill=Topic)) + 
+  geom_col(show.legend = FALSE) +
+  coord_flip()+
+  facet_wrap(~ Topic, scales = "free_y") +
+  scale_x_reordered() + 
+  xlab("Document") + 
+  theme(
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(size = 8))
+
+p1/p2
+
+
+
+ggplot(theta.long,
+       aes(x = Theta,
+           y = Doc,
+           fill = Topic)) + 
+  geom_bar(stat="identity") +
+  ylab("Model") 
+```
+
+
+##### LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -
+
+```{r}
+# Most Prevalent Topic
+rev(sort(colSums(Smartphone_reviews.lda$theta)/sum(Smartphone_reviews.lda$theta)))
+
+# Topic Coherence
+speech.codo <- fcm(
+  Smartphone_reviews.dfm.group, 
+  context = "document",
+  count = "boolean",
+  tri = FALSE) # co-document frequencies
+term.mat <- seededlda::terms(Smartphone_reviews.lda, 5)
+Coh <- rep(0, 5)
+names(Coh) <- paste0("Topic", 1:5)
+for (k in 1:5) {
+  D.mat <- t(speech.codo[term.mat[,k], term.mat[,k]])
+  D.vec <- Smartphone_reviews.dfm.group %>% 
+    textstat_frequency %>% 
+    filter(feature %in% term.mat[, k]) %>% 
+    data.frame %>%
+    select(feature, docfreq)
+  for (m in 2:5){
+    for (l in 1:(m - 1)) {
+      vm <- term.mat[m, k]
+      vl <- term.mat[l, k]
+      Coh[k] <- Coh[k] + log((D.mat[vm, vl] + 1) / filter(D.vec, feature == vl)$docfreq)
+    }
+  }
+}
+rev(sort(Coh))
+
+# See coherent Topic
+as.matrix(speech.codo[term.mat[, 2], term.mat[, 2]])
+
+# See least coherent Topic
+as.matrix(speech.codo[term.mat[, 1], term.mat[, 1]])
+
+
+# Exclusivity of the topic
+excl <- rep(0, 5)
+names(excl) <- paste0("Topic", 1:5)
+for (k in 1:5) {
+  for (i in 1:length(term.mat[,k])) {
+    term.phi <- filter(phi.long, Term == term.mat[i,k])
+    excl[k] <- excl[k] + filter(term.phi, Topic == "topic1")$Phi / sum(term.phi$Phi)
+  }
+  excl[k] <- excl[k] / length(term.mat[, k])
+}
+rev(sort(excl))
+```
 
 
