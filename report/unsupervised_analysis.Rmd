@@ -161,7 +161,7 @@ smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% #change 
   filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
 smartphone.feat$feature
 
-smartphone.word.euc <- textstat_simil(
+smartphone.word.cos <- textstat_simil(
   Smartphone_reviews.dfm.group[, smartphone.feat$feature],
   method = "cosine",
   margin = "feature")
