@@ -15,7 +15,8 @@ packages <- c(
   "flextable", # for the report
   "readxl", "readr", # read files
   "irlba", "sentimentr", "quanteda.textmodels", "quanteda.textplots",
-  "ranger", "caret", "text2vec", "stringi", "jsonlite", "reticulate", "spacyr", "word2vec", # for analysis
+  "ranger", "caret", "text2vec", "stringi", "jsonlite", "reticulate", 
+  "spacyr", "word2vec", "seededlda", # for analysis
   "sentimentr", # for sentiments
   "rio" # data import/export
 )

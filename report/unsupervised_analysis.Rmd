@@ -307,8 +307,6 @@ biplot(
 
 ```{r}
 # Term-Topic Analysis
-library(seededlda)
-
 set.seed(123)
 Smartphone_reviews.lda <- textmodel_lda(x = Smartphone_reviews.dfm.group, k = 5)
 seededlda::terms(Smartphone_reviews.lda, 5)
