@@ -42,7 +42,7 @@ Looking at the heatmap below, we can conclude the following points:
 * Samsung Galaxy S21 FE is not similar to any other phone
 * Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models. 
 
-Further, we have seen the qgraph that plots the eucledian distances based on the thikness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heatmap earlier and based on the thinkness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models. 
+Further, we have seen the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models. 
 
 ```{r}
 # make a heatmap representation of the similarities between the documents.
@@ -112,7 +112,7 @@ qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="
 
 ### **Clustering of Documents**
 
-Moving on to the Clustering of Documents, we have creted some dendrograms to show which models are similart to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level betweel the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations. 
+Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations. 
 
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc))
@@ -177,8 +177,8 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
     name = "Cosine") +
   geom_tile() + 
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-    axis.text.y = element_text(size = 5)) +
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 8)) +
   xlab("") + 
   ylab("")
 ```
@@ -186,7 +186,7 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
 
 #### Clustering Words
 
-From the below dendrogram we can see that the first 2 words that were clistered wew "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
+From the below dendrogram we can see that the first 2 words that were clustered were "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
 
 ```{r}
 smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
