@@ -3,6 +3,7 @@ output: html_document
 editor_options: 
   chunk_output_type: inline
 ---
+
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
@@ -10,10 +11,9 @@ source(here::here("script/setup.R"))
 
 ## **Unsupervised Learning**
 
-
 ### **Similarities**
 
-For this section, we will be analyzing the similarities between each of the documents and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects. 
+For this section, we will be analyzing the similarities between each of the documents and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects.
 
 ```{r}
 # compute the Jaccard index matrix, the cosine matrix, and the Euclidean distances matrix.
@@ -34,15 +34,15 @@ smartphone.euc <- textstat_dist(
 
 ```
 
-To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews. 
+To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews.
 
 Looking at the heatmap below, we can conclude the following points:
 
-* iPhone 11 is not similar to any other phone. The closest one to it is the iPhone 11 Pro where the euclidean distance is around 0.5. 
-* Samsung Galaxy S21 FE is not similar to any other phone
-* Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models. 
+-   iPhone 11 is not similar to any other phone. The closest one to it is the iPhone 11 Pro where the euclidean distance is around 0.5.
+-   Samsung Galaxy S21 FE is not similar to any other phone
+-   Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models.
 
-Further, we have seen the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models. 
+Further, we have seen the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models.
 
 ```{r}
 # make a heatmap representation of the similarities between the documents.
@@ -109,10 +109,9 @@ qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="
 # qgraph((1/as.matrix(smartphone.euc)), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 ```
 
-
 ### **Clustering of Documents**
 
-Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations. 
+Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
 
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc))
@@ -133,7 +132,7 @@ smartphone.km$cluster
 
 ##### Extract the ten words that are the most used.
 
-We have then created the 4 clusters and have chosen to extract the 10 words that are more often used 
+We have then created the 4 clusters and have chosen to extract the 10 words that are more often used
 
 ```{r}
 data.frame(
@@ -154,7 +153,7 @@ data.frame(
 
 #### **Similarities between Words**
 
-Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together. 
+Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together.
 
 ```{r}
 smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% #change this once R works
@@ -183,10 +182,9 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
   ylab("")
 ```
 
-
 #### Clustering Words
 
-From the below dendrogram we can see that the first 2 words that were clustered were "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
+From the below dendrogram we can see that the first 2 words that were clustered were "life" and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.
 
 ```{r}
 smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
@@ -239,31 +237,53 @@ smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ))
 plot(smartphone.occ.hc)
 ```
 
-
 ### **Topic Modeling**
 
+We decided to use Topic modeling to discover the abstract "topics" that occur in a collection of documents, in this case the grouped corpus of smartphones Models (*Wikipedia,2022*). Topic Modeling will help us to identify the context of the documents by detecting similar words patterns inside them, and by clustering those group of words together.
+
 #### **LSA on TF (DFM)**
+
+Latent Semantic Analysis, or LSA, is one of the techniques that we will use for topic modeling. LSA is a reduction technique that decomposes the DTM into 3 matrices ($M = 𝑈Σ𝑉^{𝑡}$), where $Σ$ represents the strength of the topic, $𝑈$ the links between the document and each topic, and $𝑉^{t}$ the links between the terms and each topic.
+
+
 
 ```{r, warning=FALSE}
 Smartphone_reviews.lsa <- textmodel_lsa(
   x = Smartphone_reviews.dfm.group,
-  nd = 10) 
+  nd = 5) 
 
-head(Smartphone_reviews.lsa$docs)
-head(Smartphone_reviews.lsa$features)
-
+# Ddefine the number of terms to filter
 n.terms <- 5
 
-## For Dimension 2
+# For Dimension 1
+w.order <- sort(Smartphone_reviews.lsa$features[, 1], decreasing = TRUE)
+w.top1 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+# For Dimension 2
 w.order <- sort(Smartphone_reviews.lsa$features[, 2], decreasing = TRUE)
 w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-## For Dimension 3
+
+# For Dimension 3
 w.order <- sort(Smartphone_reviews.lsa$features[,3], decreasing = TRUE)
 w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
 
+# For Dimension 4
+w.order <- sort(Smartphone_reviews.lsa$features[, 4], decreasing = TRUE)
+w.top4 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+# For Dimension 5
+w.order <- sort(Smartphone_reviews.lsa$features[, 5], decreasing = TRUE)
+w.top5 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.top1
 w.top2
 w.top3
+w.top4
+w.top5
+```
 
+
+```{r}
 w.subset <- Smartphone_reviews.lsa$features[
     c(unique(c(names(w.top2), names(w.top3)))), 2:3]
 
@@ -274,6 +294,17 @@ biplot(
   cex = c(0.8, 0.8),
   xlab = "Dim 2",
   ylab = "Dim 3")
+
+w.subset <- Smartphone_reviews.lsa$features[
+    c(unique(c(names(w.top5), names(w.top5)))), 4:5]
+
+biplot(
+  y = Smartphone_reviews.lsa$docs[, 4:5],
+  x = w.subset,
+  col = c("black","red"),
+  cex = c(0.8, 0.8),
+  xlab = "Dim 4",
+  ylab = "Dim 5")
 ```
 
 #### **LSA on TF (TF-IDF)**
@@ -302,8 +333,7 @@ biplot(
   ylab="Dim 3")
 ```
 
-
-#### **LDA **
+#### **LDA** 
 
 ```{r}
 # Term-Topic Analysis
@@ -365,7 +395,6 @@ ggplot(theta.long,
   ylab("Model") 
 ```
 
-
 ##### **LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -**
 
 ```{r}
@@ -417,6 +446,3 @@ for (k in 1:5) {
 }
 rev(sort(excl))
 ```
-
-
-
