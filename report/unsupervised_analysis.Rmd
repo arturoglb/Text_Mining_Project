@@ -8,52 +8,10 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
+## **Unsupervised Learning**
 
-```{r}
-Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
-row.name <- as.vector(Smartphone_reviews$Model)
-row.name <- paste(row.name, "_", sep = "")
-row.name <- paste0(row.name, 1:15297)
-row.names(Smartphone_reviews) <- row.name
 
-#Creating a corpus
-Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
-               meta = list(source = "Smartphone reviews"))
-summary(Smartphone_reviews.cp) %>% head(10)
-
-# Creating Corpus by Group Model
-Smartphone_reviews.cp.group <- corpus_group(Smartphone_reviews.cp, groups = Model)
-summary(Smartphone_reviews.cp.group) 
-
-#Creating tokens
-Smartphone_reviews.tk <- tokens(
-  Smartphone_reviews.cp,
-  remove_punct = TRUE,
-  remove_symbols = TRUE,
-  remove_numbers = TRUE,
-  remove_separators = TRUE) %>%
-  tokens_tolower() %>%
-  tokens_remove(stop_words$word)
-
-#lemmatization of words
-
-Smartphone_reviews.tk <- Smartphone_reviews.tk %>%  
-  tokens_replace(
-  pattern = hash_lemmas$token,
-  replacement = hash_lemmas$lemma)
-
-## Compute the DTM, TF-IDF and global frequencies
-Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)
-Smartphone_reviews.tfidf <- dfm_tfidf(Smartphone_reviews.dfm)  
-Smartphone_reviews.freq <- textstat_frequency(Smartphone_reviews.dfm)
-
-## Compute the DTM, TF-IDF and global frequencies per group
-Smartphone_reviews.dfm.group <- dfm_group(Smartphone_reviews.dfm, groups = Model)
-Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)  
-Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
-```
-
-## **Unsupervised Learning and Similarities**
+### **Similarities**
 
 For this section, we will be analyzing the similarities between each of the documents and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects. 
 
@@ -152,9 +110,10 @@ qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="
 ```
 
 
-# Clustering of Documents
+### **Clustering of Documents**
 
 Moving on to the Clustering of Documents, we have creted some dendrograms to show which models are similart to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level betweel the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations. 
+
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc))
 ## smartphone.hc <- hclust(as.dist(1 - smartphone.jac)) # use this line for Jaccard
@@ -172,9 +131,7 @@ smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
-
-
-# Extract the ten words that are the most used.
+##### Extract the ten words that are the most used.
 
 We have then created the 4 clusters and have chosen to extract the 10 words that are more often used 
 
@@ -195,11 +152,10 @@ data.frame(
 )
 ```
 
-
-
-## Similarities between Words
+#### **Similarities between Words**
 
 Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together. 
+
 ```{r}
 smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% #change this once R works
   filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
@@ -228,7 +184,7 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
 ```
 
 
-#Clustering Words
+#### Clustering Words
 
 From the below dendrogram we can see that the first 2 words that were clistered wew "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
 
@@ -237,11 +193,10 @@ smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
 plot(smartphone.word.hc)
 ```
 
-
-
-# Cooccurence
+#### Cooccurence
 
 Cooccurence describes how words occur together which in turn captures the different relationships between words.
+
 ```{r}
 smartphone.fcm <- fcm(Smartphone_reviews.tk, 
                  window = 3, 
@@ -283,5 +238,187 @@ smartphone.inv_occ <-
 smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ))
 plot(smartphone.occ.hc)
 ```
+
+
+### **Topic Modeling**
+
+#### **LSA on TF (DFM)**
+
+```{r, warning=FALSE}
+Smartphone_reviews.lsa <- textmodel_lsa(
+  x = Smartphone_reviews.dfm.group,
+  nd = 10) 
+
+head(Smartphone_reviews.lsa$docs)
+head(Smartphone_reviews.lsa$features)
+
+n.terms <- 5
+
+## For Dimension 2
+w.order <- sort(Smartphone_reviews.lsa$features[, 2], decreasing = TRUE)
+w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+## For Dimension 3
+w.order <- sort(Smartphone_reviews.lsa$features[,3], decreasing = TRUE)
+w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.top2
+w.top3
+
+w.subset <- Smartphone_reviews.lsa$features[
+    c(unique(c(names(w.top2), names(w.top3)))), 2:3]
+
+biplot(
+  y = Smartphone_reviews.lsa$docs[, 2:3],
+  x = w.subset,
+  col = c("black","red"),
+  cex = c(0.8, 0.8),
+  xlab = "Dim 2",
+  ylab = "Dim 3")
+```
+
+#### **LSA on TF (TF-IDF)**
+
+```{r, warning=FALSE}
+Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
+                                         nd = 10) 
+head(Smartphone_reviews.lsa2$docs)
+head(Smartphone_reviews.lsa2$features)
+Smartphone_reviews.lsa2$sk
+
+n.terms <- 5
+w.order <- sort(Smartphone_reviews.lsa2$features[,2], decreasing = TRUE)
+w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.order <- sort(Smartphone_reviews.lsa2$features[,3], decreasing = TRUE)
+w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+
+w.subset <- Smartphone_reviews.lsa2$features[c(unique(c(names(w.top2), names(w.top3)))),2:3]
+biplot(
+  y = Smartphone_reviews.lsa2$docs[,2:3],
+  x = w.subset,
+  col = c("black", "red"),
+  cex = c(0.8, 0.8),
+  xlab = "Dim 2",
+  ylab="Dim 3")
+```
+
+
+#### **LDA **
+
+```{r}
+# Term-Topic Analysis
+library(seededlda)
+
+set.seed(123)
+Smartphone_reviews.lda <- textmodel_lda(x = Smartphone_reviews.dfm.group, k = 5)
+seededlda::terms(Smartphone_reviews.lda, 5)
+seededlda::topics(Smartphone_reviews.lda)
+seededlda::topics(Smartphone_reviews.lda) %>% table()
+
+# Term-Topic Analysis
+phi.long <- melt(
+  Smartphone_reviews.lda$phi,
+  varnames = c("Topic", "Term"),
+  value.name = "Phi") 
+
+p1 <- phi.long %>% 
+  group_by(Topic) %>% 
+  top_n(10, Phi) %>% 
+  ggplot(aes(reorder_within(Term, Phi, Topic), Phi, fill=Topic)) + 
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~ Topic, scales = "free_y") +
+  scale_x_reordered() + 
+  xlab("Term") + 
+  theme(
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(size = 8))
+
+# Topic-Document Analysis
+
+set.seed(123)
+theta.long <- melt(
+  Smartphone_reviews.lda$theta,
+  varnames = c("Doc", "Topic"),
+  value.name = "Theta")
+
+p2 <- theta.long %>% 
+  group_by(Topic) %>% 
+  top_n(10, Theta) %>% 
+  ggplot(aes(reorder_within(Doc, Theta, Topic), Theta, fill=Topic)) + 
+  geom_col(show.legend = FALSE) +
+  coord_flip()+
+  facet_wrap(~ Topic, scales = "free_y") +
+  scale_x_reordered() + 
+  xlab("Document") + 
+  theme(
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(size = 8))
+
+p1/p2
+
+
+
+ggplot(theta.long,
+       aes(x = Theta,
+           y = Doc,
+           fill = Topic)) + 
+  geom_bar(stat="identity") +
+  ylab("Model") 
+```
+
+
+##### **LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -**
+
+```{r}
+# Most Prevalent Topic
+rev(sort(colSums(Smartphone_reviews.lda$theta)/sum(Smartphone_reviews.lda$theta)))
+
+# Topic Coherence
+speech.codo <- fcm(
+  Smartphone_reviews.dfm.group, 
+  context = "document",
+  count = "boolean",
+  tri = FALSE) # co-document frequencies
+term.mat <- seededlda::terms(Smartphone_reviews.lda, 5)
+Coh <- rep(0, 5)
+names(Coh) <- paste0("Topic", 1:5)
+for (k in 1:5) {
+  D.mat <- t(speech.codo[term.mat[,k], term.mat[,k]])
+  D.vec <- Smartphone_reviews.dfm.group %>% 
+    textstat_frequency %>% 
+    filter(feature %in% term.mat[, k]) %>% 
+    data.frame %>%
+    select(feature, docfreq)
+  for (m in 2:5){
+    for (l in 1:(m - 1)) {
+      vm <- term.mat[m, k]
+      vl <- term.mat[l, k]
+      Coh[k] <- Coh[k] + log((D.mat[vm, vl] + 1) / filter(D.vec, feature == vl)$docfreq)
+    }
+  }
+}
+rev(sort(Coh))
+
+# See coherent Topic
+as.matrix(speech.codo[term.mat[, 2], term.mat[, 2]])
+
+# See least coherent Topic
+as.matrix(speech.codo[term.mat[, 1], term.mat[, 1]])
+
+
+# Exclusivity of the topic
+excl <- rep(0, 5)
+names(excl) <- paste0("Topic", 1:5)
+for (k in 1:5) {
+  for (i in 1:length(term.mat[,k])) {
+    term.phi <- filter(phi.long, Term == term.mat[i,k])
+    excl[k] <- excl[k] + filter(term.phi, Topic == "topic1")$Phi / sum(term.phi$Phi)
+  }
+  excl[k] <- excl[k] / length(term.mat[, k])
+}
+rev(sort(excl))
+```
+
 
 
