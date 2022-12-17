@@ -65,7 +65,7 @@ For this section, we will be analyzing the similarities between each of the docu
 #   margin = "documents")
 # 
 # smartphone.cos <- textstat_simil(
-#   Smartphone_reviews.tfidf,
+#   Smartphone_reviews.tfidf.group,
 #   method = "cosine",
 #   margin = "documents")
 
@@ -199,13 +199,13 @@ data.frame(
 
 ## Similarities between Words
 
-Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together. 
+Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words. However, the word "samsung" has the most dissimilarities with the others compared to the other words. 
 ```{r}
-smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% #change this once R works
+smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% 
   filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
 smartphone.feat$feature
 
-smartphone.word.euc <- textstat_simil(
+smartphone.word.cos <- textstat_simil(
   Smartphone_reviews.dfm.group[, smartphone.feat$feature],
   method = "cosine",
   margin = "feature")
@@ -230,7 +230,7 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
 
 #Clustering Words
 
-From the below dendrogram we can see that the first 2 words that were clistered wew "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
+From the below dendrogram we can see that the first 2 words that were clustered were "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
 
 ```{r}
 smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
@@ -243,6 +243,10 @@ plot(smartphone.word.hc)
 
 Cooccurence describes how words occur together which in turn captures the different relationships between words.
 ```{r}
+
+#### TO CHECK IF WE SHOULD USE THE GROUPED ONE ####
+
+
 smartphone.fcm <- fcm(Smartphone_reviews.tk, 
                  window = 3, 
                  tri = FALSE)
@@ -251,6 +255,8 @@ smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2
 
 ```{r}
 # heat map of the most frequent features
+
+
 
 smartphone.fcm.mat <- melt(
   as.matrix(
