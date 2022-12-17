@@ -11,6 +11,10 @@ source(here::here("script/setup.R"))
 
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+row.name <- as.vector(Smartphone_reviews$Model)
+row.name <- paste(row.name, "_", sep = "")
+row.name <- paste0(row.name, 1:15297)
+row.names(Smartphone_reviews) <- row.name
 
 #Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
@@ -49,6 +53,9 @@ Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)
 Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
 ```
 
+## **Unsupervised Learning and Similarities**
+
+For this section, we will be analyzing the similarities between each of the documents and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects. 
 
 ```{r}
 # compute the Jaccard index matrix, the cosine matrix, and the Euclidean distances matrix.
@@ -69,7 +76,15 @@ smartphone.euc <- textstat_dist(
 
 ```
 
-To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews. Since we are taking the Euclidean Distance, we will first need to transform the distances to similarities bounded between 0-1. 
+To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews. 
+
+Looking at the heatmap below, we can conclude the following points:
+
+* iPhone 11 is not similar to any other phone. The closest one to it is the iPhone 11 Pro where the euclidean distance is around 0.5. 
+* Samsung Galaxy S21 FE is not similar to any other phone
+* Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models. 
+
+Further, we have seen the qgraph that plots the eucledian distances based on the thikness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heatmap earlier and based on the thinkness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models. 
 
 ```{r}
 # make a heatmap representation of the similarities between the documents.
@@ -104,11 +119,13 @@ To highlight similarities in an easier way, we create a heatmap representation o
 
 
 ## Euclidean
+
+# Since we are taking the Euclidean distance, we will first need to transform the distances to similarities bounded between 0-1. 
 smartphone.euc.matrix <- melt(as.matrix(smartphone.euc))
 max_dist <- max(smartphone.euc.matrix$value) # to get the maximum distance
 smartphone.euc.matrix$value.std <- (max_dist - smartphone.euc.matrix$value)/max_dist 
 
-# conversion from distance to similarity in [0,1]
+#Heatmap
 ggplot(
   data = smartphone.euc.matrix,
   mapping = aes(x = Var1, 
@@ -121,14 +138,23 @@ ggplot(
     midpoint = 0.5,
     limit = c(0, 1),
     name = "Euclidean") +
-  geom_tile() + xlab("") + ylab("")
+  geom_tile() + xlab("") + ylab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=0.95),
+        strip.text = element_text(size=7))
 
+
+library(qgraph)
+
+qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
+
+# tried this code to get the inverse of the matrix to make the thinkness meaning more similar but didn't work
+# qgraph((1/as.matrix(smartphone.euc)), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 ```
 
 
 # Clustering of Documents
 
-
+Moving on to the Clustering of Documents, we have creted some dendrograms to show which models are similart to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level betweel the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations. 
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc))
 ## smartphone.hc <- hclust(as.dist(1 - smartphone.jac)) # use this line for Jaccard
@@ -149,6 +175,8 @@ smartphone.km$cluster
 
 
 # Extract the ten words that are the most used.
+
+We have then created the 4 clusters and have chosen to extract the 10 words that are more often used 
 
 ```{r}
 data.frame(
@@ -171,13 +199,14 @@ data.frame(
 
 ## Similarities between Words
 
+Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together. 
 ```{r}
-smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm) %>% #change this once R works
+smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% #change this once R works
   filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
 smartphone.feat$feature
 
-smartphone.word.cos <- textstat_simil(
-  Smartphone_reviews.dfm[, smartphone.feat$feature],
+smartphone.word.euc <- textstat_simil(
+  Smartphone_reviews.dfm.group[, smartphone.feat$feature],
   method = "cosine",
   margin = "feature")
 smartphone.word.cos.matrix <- melt(as.matrix(smartphone.word.cos)) # Convert the object to matrix then to data frame 
@@ -199,8 +228,9 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
 ```
 
 
-
 #Clustering Words
+
+From the below dendrogram we can see that the first 2 words that were clistered wew "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
 
 ```{r}
 smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
@@ -211,11 +241,12 @@ plot(smartphone.word.hc)
 
 # Cooccurence
 
+Cooccurence describes how words occur together which in turn captures the different relationships between words.
 ```{r}
 smartphone.fcm <- fcm(Smartphone_reviews.tk, 
                  window = 3, 
                  tri = FALSE)
-smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2 ## make the co-occurrence matrix symmetrical
+smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2 
 ```
 
 ```{r}
