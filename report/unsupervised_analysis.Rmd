@@ -297,17 +297,15 @@ biplot(
 
 #### **LSA on Term Frequencies (TF-IDF)**
 
-Now, we apply the same approach as above, but in this case we will use the TF-IDF matrix. As we have already explain, the TF-IDF quantifies the relevance of a word in a document. First, we build the LSA object with the `textmodel_lsa` function from the package `quanteda.textmodels` with our matrix created for the TF-IDF grouped model reviews(*only 5 dimensions*). Next, we break down the data for interpretability by considering only the 5 words with the highest values and the 5 with the lowest values. Finally, we plot the Biplot to identify the Topics and its words associated and unrelated.
+Now, we apply the same approach as above, but in this case we will use the TF-IDF matrix. As we have already explain, the TF-IDF quantifies the relevance of a word in a document. First, we build the LSA object with the `textmodel_lsa` function from the `quanteda.textmodels` package with our matrix created for the TF-IDF grouped model reviews(*only 5 dimensions*). Next, we break down the data for interpretability by considering only the 5 words with the highest values and the 5 with the lowest values. Finally, we plot the Biplot to identify the Topics and its words associated and unrelated.
 
-What we discover is that Topic 2 (*Dim 2*) is associated to the words "scratch", "iphone", "generic", "health", "renew" and the models iPhone 11 Pro, iPhone 11, iPhone 11 Pro Max. Thereby, is unrelated to terms such as "s21", "s8", "samsung", "s20", "fe" and the model Samsung Galaxy S21 FE. For Topic 3 (*Dim 3*) we see a relation with terms like "aesthetic", "mica", "generic", "pro", "max" and 
+What we discover is that Topic 2 (*Dim 2*) is associated to the words "scratch", "iphone", "generic", "health", "renew" and the models iPhone 11 Pro, iPhone 11, iPhone 11 Pro Max. Thereby, is unrelated to terms such as "s21", "s8", "samsung", "s20", "fe" and the model Samsung Galaxy S21 FE. For Topic 3 (*Dim 3*) we see a relation with terms like "aesthetic", "mica", "generic", "pro", "max" and iPhone 11 Pro, iPhone 11 Pro Max, but unrelated to iPhone 11 and the words "transfer", "red", "yellow", "purple", "daughter". 
 
+Comparing both (*DFM and TF-IDF*) LSA approaches, we identify that for Topic 2 the words that are similar are "scratch" and "iphone". This make sense, as we have seen that the main concern from iPhone reviewers is comparing their new model with previous models (*usage of term iphone*) or praising/complaining about the current status of the smartphone received (*usage of term scratch*). For Topic 3, we detect that terms changed significantly, meaning that the context of the topic would be different, with the exception of the word **Pro**. 
 
 ```{r, warning=FALSE}
 Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
                                          nd = 5) 
-head(Smartphone_reviews.lsa2$docs)
-head(Smartphone_reviews.lsa2$features)
-Smartphone_reviews.lsa2$sk
 
 n.terms <- 5
 w.order <- sort(Smartphone_reviews.lsa2$features[,2], decreasing = TRUE)
@@ -327,22 +325,44 @@ biplot(
 ```
 
 #### **LDA** 
+ 
+Latent Dirichlet Allocation (LDA) is a topic modeling algorithm that is used to identify the topics present in a collection of documents. It is a generative model that assumes that each document is a mixture of a fixed number of topics, and that each word in the document is associated with one of the topics (*Susan Li, 2018*).
+
+We decided to incorporate this algorithm to our dataset, so we build the LDA object with the `textmodel_lda` function from the `seededlda` package. We wanted to apply the same amount of topics (*5 topics*) similar than the LSA DTM approach because we tried with 10, 9, and 7 topics but the results were not meaningful. 
+
+Below we can observe the top 5 terms appearing on each topic
 
 ```{r}
 # Term-Topic Analysis
 set.seed(123)
 Smartphone_reviews.lda <- textmodel_lda(x = Smartphone_reviews.dfm.group, k = 5)
-seededlda::terms(Smartphone_reviews.lda, 5)
-seededlda::topics(Smartphone_reviews.lda)
-seededlda::topics(Smartphone_reviews.lda) %>% table()
+seededlda::terms(Smartphone_reviews.lda, 5) %>% 
+  kable(caption = "Top 5 terms per Topic") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) 
+```
 
+##### **Term-Topic Analysis**
+
+The $ϕ$ (phi) is a term-topic distribution. It represents the probability of a term occurring in a given topic. To rephrase it, for a given topic, the $ϕ$ values indicate the likelihood of each term being associated with that topic. The terms with the highest $ϕ$  values are the ones that are most strongly associated with the topic. To visualize those associations we plot the $ϕ$  values with the 10 largest probabilities terms inside each subject.
+
+So we can interpret the following:
+
+* Topic 1: The reviews found with this topic will talk more about the color of the models, the capacity, and size.
+* Topic 2: It is mainly related to the term phone, so we expect that this topic will be among all models (*Topic-Document Analysis*).
+* Topic 3: Refers to more to the characteristics and conditions of the smartphones.
+* Topic 4: We can assume that this topic will be associated with some of the iPhone models, as we see the terms "pro" and "max" on the top 3, and maybe some samsung models, due to the words "aesthetic", detail. 
+* Topic 5: The top terms tell us that this topic is oriented to the brand Samsung, as we can identify the main terms are related to Samsung models.
+
+
+```{r}
 # Term-Topic Analysis
 phi.long <- melt(
   Smartphone_reviews.lda$phi,
   varnames = c("Topic", "Term"),
   value.name = "Phi") 
 
-p1 <- phi.long %>% 
+phi.long %>% 
   group_by(Topic) %>% 
   top_n(10, Phi) %>% 
   ggplot(aes(reorder_within(Term, Phi, Topic), Phi, fill=Topic)) + 
@@ -355,38 +375,49 @@ p1 <- phi.long %>%
     axis.text.y = element_text(size = 8),
     strip.text = element_text(size = 8))
 
-# Topic-Document Analysis
+```
 
+##### **Topic-Document Analysis** 
+
+The θ matrix (theta) is a document-topic distribution. It represents the probability of a topic occurring in a given document. To put it in another way, for a given document, the θ values indicate the likelihood of each topic being present in that document. 
+
+Looking at the below chart, we can identify the following:
+
+* The models reviews from the first row, the iPhone 13 mini, iPhone 13 Pro, and iPhone 13 Pro Max mostly talk 50% about Topic 3. 
+* Unsurprisingly we see that all models have a significant percentage that is about Topic 2.
+* On Samsung models its observed that Topic 4 had a minor appearance. However, for Apple models we see a higher participation. 
+* Topic 5 is mainly observed in all Samsung models. Meaning that what we believed on the previous analysis is correct.
+* About Topic 1 is slightly prevalent on the mini models of Apple, the Iphone 13, and the Samsung models S20 Plus and FE. 
+
+```{r, fig.width=10}
+# Topic-Document Analysis
 set.seed(123)
 theta.long <- melt(
   Smartphone_reviews.lda$theta,
   varnames = c("Doc", "Topic"),
   value.name = "Theta")
 
-p2 <- theta.long %>% 
-  group_by(Topic) %>% 
-  top_n(10, Theta) %>% 
-  ggplot(aes(reorder_within(Doc, Theta, Topic), Theta, fill=Topic)) + 
-  geom_col(show.legend = FALSE) +
-  coord_flip()+
-  facet_wrap(~ Topic, scales = "free_y") +
-  scale_x_reordered() + 
-  xlab("Document") + 
-  theme(
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 8))
-
-p1/p2
-
-
-
 ggplot(theta.long,
        aes(x = Theta,
            y = Doc,
            fill = Topic)) + 
   geom_bar(stat="identity") +
-  ylab("Model") 
+  ylab("Models") 
+
+# # Other graphical representation
+# theta.long %>% 
+#   filter(Doc %in% doc.list) %>%  
+#   ggplot(aes(reorder_within(Topic, Theta, Doc), Theta, fill=Topic)) + 
+#   geom_col(show.legend = FALSE) +
+#   coord_flip()+
+#   facet_wrap(~ Doc, scales = "free_y") +
+#   scale_x_reordered() + 
+#   xlab("Models") +
+#    theme(
+#     axis.text.y = element_text(size = 8),
+#     strip.text = element_text(size = 8))
 ```
+
 
 ##### **LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -**
 
