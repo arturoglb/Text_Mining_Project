@@ -1,22 +1,14 @@
 ---
-title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
-author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  html_document:
-    code_folding: hide
-    theme:
-      bootswatch: united
+output: html_document
 editor_options: 
-  markdown: 
-    wrap: 72
+  chunk_output_type: inline
 ---
 
 ```{r, include=FALSE}
 source(here::here("script/unsupervised_learning/clustering/document_clustering.R"))
 ```
 
-# Clustering of documents
+### **Clustering of documents**
 
 In this section, we are using our previously created embedded document
 matrix in order to cluster documents together. In theory, the clustering
