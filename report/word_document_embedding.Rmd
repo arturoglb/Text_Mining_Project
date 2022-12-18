@@ -1,0 +1,110 @@
+---
+title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
+author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    theme:
+      bootswatch: united
+---
+```{r, include=FALSE}
+source(here::here("script/unsupervised_learning/embedding/document_embedding.R"))
+```
+# Word embedding
+The word embedding has been applied on our three reviews datasets: smartphone_reviews_final.csv, Apple_final.csv, and Samsung_final.csv. To embed words into 50-dimension vectors, we have decided to apply the `word2vec::word2vec` function using the `cbow` method with 30 iterations.
+```{r, eval=FALSE, echo=TRUE}
+# # Read data
+all_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
+# # Train word2vec model
+# Embed each word into a 50-dimension vector
+all_model <- word2vec(tolower(all_reviews$Reviews), type = "cbow", dim = 50, iter = 30)
+
+# Transform the result into a matrix
+embedded_words <- as.matrix(all_model)
+```
+Here is an overview of the resulting matrix:
+```{r, echo=FALSE}
+# # Matrix of embedded words
+str(embedded_words)
+```
+To visualize the results in an interactive fashion, we used the `uwot::umap` and the package `plot_ly`. In the following 2D and 3D graphs, only a subset of the words have been plotted in order to facilitate the visualization.
+
+```{r, eval=FALSE, echo=TRUE}
+# # Read models
+all_model <- read.word2vec(here::here("script/models/word2vec/all_model.bin"))
+
+# # Create interactive plot of words
+# source: https://cran.r-project.org/web/packages/word2vec/readme/README.html
+embedded_words <- as.matrix(all_model)
+viz <- umap(embedded_words, n_neighbors = 25, n_threads = 5, n_components = 3)
+
+# Create the dataframe used for the plot
+df  <- data.frame(word = gsub("//.+", "", rownames(embedded_words)), 
+                  xpos = gsub(".+//", "", rownames(embedded_words)), 
+                  x = viz[, 1], y = viz[, 2], z = viz[, 3],
+                  stringsAsFactors = FALSE)
+
+# Subset the dataframe
+set.seed(456)
+nb_words_to_display <- 1500
+df  <- df[sample(1:nrow(df), nb_words_to_display),]
+
+# Interactive 2D plot
+graph_2d <- plot_ly(df, x = ~x, y = ~y, type = "scatter", mode = "text", text = ~word) %>% 
+  layout(title = "2-Dimension word embedding (interactive graph)")
+
+# Interactive 3D plot
+graph_3d <- plot_ly(df, x = ~x, y = ~y, z = ~z, type = "scatter3d", mode = 'text', text = ~word) %>% 
+  layout(title = "3-Dimension word embedding (interactive graph)")
+```
+```{r, fig.align='center', out.width='100%'}
+graph_2d
+graph_3d
+```
+# Document embedding
+We pre-processed the documents (reviews) by removing punctuation, lowercasing and splitting them into individual words. We then used the results from the word embedding to embed each review using the following function:
+```{r, eval=FALSE, echo=TRUE}
+# This function takes 2 arguments: A word vector (= sentence/document) and a matrix of embedded words
+# It uses each embedded word values to return the value of the word vector
+# Here the input word vector should be the words in a given document
+# It assumes that by averaging the vector values of the words found in the
+# document it's possible to summarize the information contained in a document
+# as a vector 
+
+document_embedding <- function(words, embedded_words_matrix){
+  # Keep words present in the embedded_words_matrix
+  look_up_words <- words[words %in% rownames(embedded_words_matrix)]
+  
+  # Document embedding
+  # If there is more than one word in the document, do colSums
+  if (length(look_up_words) > 1){
+    document_embedding <- colMeans(embedded_words_matrix[look_up_words,])
+    # If length = 1, don't run colSums as it will throw an error
+  } else if (length(look_up_words == 1)){
+    document_embedding <- embedded_words_matrix[look_up_words,]
+    # If look_up_words is empty return a vector of zeros
+  } else {
+    document_embedding <- rep(0, ncol(embedded_words_matrix))
+  }
+  
+  # Return embedded document
+  return(document_embedding)
+}
+
+# # Embed documents (reviews) using document_embedding function
+# Remove punctuation
+all_reviews_sentences <- gsub('[[:punct:] ]+',' ', all_reviews$Reviews)
+
+# Split sentences into words (to lower and trimmed) - Resulting in a list
+document_words <- lapply(strsplit(tolower(all_reviews_sentences), " "), trimws)
+
+# Document embedding using own document_embedding function
+embedded_documents <- lapply(X = document_words, FUN = document_embedding, embedded_words_matrix = embedded_words)
+```
+Here is an overview of the resulting matrix:
+```{r, echo=FALSE}
+# # Matrix of embedded words
+str(embedded_documents)
+```
