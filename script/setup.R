@@ -10,14 +10,16 @@ packages <- c(
   "tidyverse", "tidytext", "wordcloud", "lexicon", "quanteda", "quanteda.textstats",
   "tm", "ggrepel", "udpipe", "widyr", "textdata", "reshape2",  # for wrangling
   "rvest", "magick", "pdftools", # web scrapping
-  "patchwork", "broom", "ggwordcloud", "igraph", "patchwork", # for plotting
+  "ggplot2", "patchwork", "broom", "ggwordcloud", "igraph", "patchwork", # for plotting
   "knitr", "kableExtra", "bookdown", "rmarkdown", "bslib", "summarytools",
   "flextable", # for the report
   "readxl", "readr", # read files
   "irlba", "sentimentr", "quanteda.textmodels", "quanteda.textplots",
-  "ranger", "caret", "text2vec", "stringi", "jsonlite", "reticulate", "spacyr", "word2vec", # for analysis
+  "ranger", "caret", "text2vec", "stringi", "jsonlite", "reticulate", 
+  "spacyr", "word2vec", "seededlda", # for analysis
   "sentimentr", # for sentiments
-  "rio" # data import/export
+  "rio", # data import/export
+  "caret", "caTools", "randomForest" # for supervised learning
 )
 
 purrr::walk(packages, library, character.only = TRUE) 

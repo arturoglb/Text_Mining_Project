@@ -109,18 +109,20 @@ both_samsung[1:6,] %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
-
+<br>
 After dealing with the steps explained above, we have transformed our files from having reviews with different languages to a final file with reviews in English. Thus, the number of reviews has slightly decreased, in the case of Apple from **12,965 obs to 12,712 obs**, and in the case of Samsung from **2,606 obs to 2,585**.
 
 ## **Exploratory Data Analysis**
 
-### Tokenization and Cleaning
+### **Tokenization and Cleaning**
 
 Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each tokens will be assigned a word - and to get rid of non conforming formats. Thereby, we are removing in our corpus any punctuation; symbols; numbers; separator. To have a better analysis we also decided to remove "stop words" which correspond to parasite words - in other terms, words such as "a" "the" etc... that do not add value to the analysis. Finally instead of using a steeming method, we decided to proceed with a lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unuseful repetition with minor change - teach / teaching / taught will all be reduced to the root teach. Prior to continue with graphical representation, we also compute the following information:
 
-*DTM - Document Term matrix corresponds to the number of time a specif terms will appear
-*TF-IDF -  Term Frequency Inverse Document frequency is a measure to quantify the relevance of a particular words in a document. 
-*Global Frequency corresponds to the frequency of each words for each document by rank.
+* DTM - Document Term matrix corresponds to the number of time a specif terms will appear
+* TF-IDF -  Term Frequency Inverse Document frequency is a measure to quantify the relevance of a particular words in a document. 
+* Global Frequency corresponds to the frequency of each words for each document by rank.
+
+Below you will find two tables representing the corpus text of smartphones reviews that we are going to use. The first one is representing the corpus summary (*the text column shows the Model name with the numeration of each review across the dataset so we could identify them*) while the second one is grouped by Model type.
 
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
@@ -132,11 +134,17 @@ row.names(Smartphone_reviews) <- row.name
 #Creating a corpus
 Smartphone_reviews.cp <- corpus(Smartphone_reviews, text_field = "Reviews",
                meta = list(source = "Smartphone reviews"))
-summary(Smartphone_reviews.cp) %>% head(10)
+summary(Smartphone_reviews.cp) %>% head(10) %>% 
+  kable(caption = "Corpus Summary") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 
 # Creating Corpus by Group Model
 Smartphone_reviews.cp.group <- corpus_group(Smartphone_reviews.cp, groups = Model)
-summary(Smartphone_reviews.cp.group) 
+summary(Smartphone_reviews.cp.group) %>% 
+  kable(caption = "Corpus Group by Model Summary") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 
 #Creating tokens
 Smartphone_reviews.tk <- tokens(
@@ -166,8 +174,9 @@ Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)
 Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
 
 ```
+<br>
 
-#### Plotting frequency
+#### **Plotting frequency**
 
 Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as  we got our information from phones reviews on amazon, an interesting point came from the two most used words afterwards. Indeed, we might affirm, with this graphs that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
 
@@ -176,47 +185,80 @@ Smartphone_reviews.freq %>%
   top_n(20, frequency) %>%
   ggplot(aes(
     x = reorder(feature, frequency),
-    y = frequency)) + 
+    y = frequency, fill=feature)) + 
   geom_bar(stat = "identity") + 
   coord_flip() +
   xlab("Frequency") + 
-  ylab("term")
+  ylab("Term") +
+  theme(legend.position="none")
 ```
 
-#### For document
+**Models Frequency based on DFM - Ungrouped**
 
 This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common word used all through out the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
 
-```{r}
+```{r, fig.height=7}
 Smartphone_reviews.dfm %>% 
   tidy() %>% 
   top_n(10, count) %>% 
-  ggplot(aes(x = term, y = count)) + 
+  ggplot(aes(x = term, y = count, fill=term)) + 
   geom_bar(stat = "Identity") + 
   coord_flip() +
   theme(axis.text.y = element_text(size = 8),
         axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2)
+  facet_wrap(~document, ncol = 2) +
+  xlab("Count") + 
+  ylab("Term") +
+  scale_fill_discrete(name = "Term")
+```
 
+**Models Frequency based on DFM - Grouped by Model**
+
+Unsurprisingly we observed that the Models chosen by the DFM on the top part of the chart are the ones with the highest amount of Tokens. The common ground across the models is the impression that customers talked about the phone and in some cases about the seller. As an example, we discover that on the iPhone 11 some of the reviews were about the conditions of the smartphones as they were refurbished and users were praising or complaining about what they had received. Some of the top 5 terms that were used were - screen, scratch, phone, iphone, buy, battery - this concur with the previous discovery. Furthermore, the usage of the term **phone** is used among all models while **scratch** is mostly used in iPhone 11. 
+
+**Models Frequency based on TF-IDF - Grouped by Model**
+
+On the bottom part of the chart, we have the same models as seen on top, but the difference lie on the relevance on the token used in regard to the review. This implies that the terms shown explain the main context of the review. Thereby, iPhone 11 model was explained by **scratch** as the main theme, meanwhile, for Samsung Galaxy S21 FE is all about comparison  with the previous model (Samsung Galaxy S20 FE). Also we detected that the iPhone 11 Pro's reviews followed the same pattern as the iPhone 11, but with the main difference being the terms **aesthetic and generic**.
+
+
+```{r, fig.height=6}
 # Plot per document grouped 
-Smartphone_reviews.tfidf.group %>% 
+p1 <- Smartphone_reviews.dfm.group %>% 
   tidy() %>% 
   top_n(10, count) %>% 
-  ggplot(aes(x = term, y = count)) + 
+  ggplot(aes(x = term, y = count, fill=term)) + 
   geom_bar(stat = "Identity") + 
   coord_flip() +
-  theme(axis.text.y = element_text(size = 8),
+  labs(title = "Models Frequency based on DFM - Grouped by Model") +
+  theme(
+        axis.text.y = element_text(size = 8),
         axis.ticks.y = element_blank())  + 
-  facet_wrap(~document, ncol = 2)
+  facet_wrap(~document, ncol = 2) 
+
+p2 <- Smartphone_reviews.tfidf.group%>% 
+  tidy() %>% 
+  top_n(10, count) %>% 
+  ggplot(aes(x = term, y = count, fill=term, palette= "heat")) + 
+  geom_bar(stat = "Identity") + 
+  coord_flip() +
+  labs(title = "Models Frequency based on TF-IDF - Grouped by Model") +
+  theme(
+        axis.text.y = element_text(size = 8),
+        axis.ticks.y = element_blank())  + 
+  facet_wrap(~document, ncol = 2) +
+  scale_fill_discrete(name = "Term") +
+  scale_fill_brewer(palette = "Paired")
+
+p1/p2
 
 ```
 
-#### Plotting maximum TF_IDF per term and document
+#### **Plotting maximum TF_IDF per document**
 
 Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specif to model, it turns out that "entry" is what matter most for a consumers. Entry in the context of purchase might corresponds to leader price. 
 
-```{r, fig.width=10}
-#Plotting maximum TF_IDF per term
+```{r}
+#Plotting maximum TF_IDF per Document
 Smartphone_reviews.tfidf %>% 
   tidy() %>%
   group_by(term) %>%
@@ -229,24 +271,32 @@ Smartphone_reviews.tfidf %>%
   geom_bar(stat = "identity") + 
   coord_flip() +
   xlab("Max TF-IDF") + 
-  ylab("term")
+  ylab("Term")
+```
 
+We applied the same procedure as the chart above, but in this case we chose to group the documents by Model so we could identify which terms have the largest TF-IDF on each smartphone. From the chart, we can interpret the following:
 
+* The Mini versions of the iPhone models 12 and 13 the largest weighted frequency term is **mini**.
+* For smartphones models like iPhone 11, iPhone 11 Pro, iPhone 11 Pro Max and iPhone 12, and iPhone 12 Pro, we can say that the terms **iphone and scratch** are very relevant words used on users reviews.
+* For the last row, we can identify that most important words are related to the model of the smartphone, for example: Samsung Galaxy S21 Plus has the word "S21" on the top of the terms, same for Samsung Galaxy S22, Samsung Galaxy S22 Plus, Samsung Galaxy 20, and Samsung Galaxy 22 Ultra. One interesting point to mention is that Samsung Galaxy S21 FE has for the second most significant term the word S20. Meaning that that most users were comparing the new generation S21 to the old one S20.
+* As for the models iPhone 13 Pro, iPhone 13 Pro Max, Samsung Galaxy Note 20 Ultra, and Samsung Galaxy S20 FE, they have a term which is more specific to each of them (*arise, max,ejection, and sm-g780*).  
+
+```{r, fig.width=10, fig.height=10}
 # Plotting maximum TF_IDF per document grouped
 
 Smartphone_reviews.tfidf.group %>% 
   tidy() %>%
   group_by(document) %>%
-  slice_max(count, n = 5) %>%
+  slice_max(count, n = 6) %>%
   ungroup() %>%
   ggplot(aes(count, reorder_within(term, count, document), fill = document)) +
   geom_col(show.legend = FALSE) + scale_y_reordered() +
   facet_wrap(~document, ncol = 4, scales = "free") +
-  labs(x = "tf-idf", y = NULL)
+  labs(x = "Max TF-IDF", y = NULL)
 ```
 
 
-#### Document log frequency
+#### **Document log frequency**
 
 While this log frequency representation is quite messy due to the amount of document used, we can still distinguish the tokens found during the frequency plot representation. Indeed - phone, battery, screen - are the most common words used and are present in nearly every document. On the other hand, we observe - entry - having a lesser document frequency, meaning that it appears less often, while still maintaining a decent log-frequency implying that it is specif to some documents only. 
 
@@ -262,7 +312,7 @@ Smartphone_reviews.freq %>%
 ```
 
 
-#### Words Cloud
+#### **Words Cloud**
 
 Another representation of the Document frequency matrix is through a word cloud, where the the most relevant words has the biggest size. From this cloud, we can identify - phone, battery, screen, iPhone, scratch, condition - as the most used words.
 
@@ -271,33 +321,25 @@ textplot_wordcloud(Smartphone_reviews.dfm)
 ```
 
 
-#### Lexical diversity
+#### **Lexical diversity**
 
 We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample. A limitation of this representation is that the lexical diversity is dependent on the size of the sentence, in this case the reviews. Nonetheless it give us insight on how diverse the reviewers is in term of words used. The highest the TTR the more diverse the lexical is. 
 
-```{r}
-Smartphone_reviews.dfm %>% textstat_lexdiv() %>% 
-  head(10) %>%
-  ggplot(aes(reorder(document, -TTR),
-             TTR)) + 
-  geom_bar(stat="identity") +
-  xlab("Text") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
-        strip.text = element_text(size=7)) 
+For instance, what we can see on the chart is that in the model Samsung Galaxy 21 Ultra we note a higher lexical diversity than the rest of the models. If we look at it with a bigger lens, the top models with the highest lexical assortment are from the brand Samsung followed only by Pro version of Apple thirteenth generation. We find that model with the highest number of tokens is iPhone 11, but it is the one with the lowest lexical distinction.
 
+```{r}
 # Lexical diversity per document(Model grouped)
 Smartphone_reviews.dfm.group %>% textstat_lexdiv() %>% 
-  head(10) %>%
   ggplot(aes(reorder(document, -TTR),
              TTR)) + 
   geom_bar(stat="identity") +
-  xlab("Text") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
+  xlab("Model") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=0.95),
         strip.text = element_text(size=7)) 
 
 ```
 
-#### Keyness
+#### **Keyness** {.tabset}
 
 To continue with our analysis we decided to applied a Chi-square test of independence between Apple's and Samsung's reviews. The purpose of this test is to compare term from a set of document to another, in this case we want to put in perspective terms used from one consumers base to an others. We create a plot with the keyness results, we also added for reference two tables containing the 10 first values from the Chi-square test for both Samsung and Apple as target. 
 
@@ -318,7 +360,8 @@ as for Apple:
 * Iphone Pro
 * Iphone SE
 
-```{r}
+##### Key terms of Apple vs Samsung {.active}
+```{r, fig.width=10}
 ## Key terms of Apple vs Samsung
 ## Take a sub-corpus and clean it
 Smartphone_reviews.tk2 <- tokens(corpus_subset(
@@ -330,19 +373,6 @@ Smartphone_reviews.tk2 <- tokens(corpus_subset(
   tokens_tolower()  %>%  
   tokens_remove(pattern = stop_words$word)
 
-## table
-Smartphone_reviews.tk2 %>% 
-  dfm() %>% 
-  dfm_group(Brand) %>% 
-  textstat_keyness(target = "Samsung") %>%
-  head(10)
-
-Smartphone_reviews.tk2 %>% 
-  dfm() %>% 
-  dfm_group(Brand) %>% 
-  textstat_keyness(target = "Apple") %>%
-  head(10)
-
 ## Compute and show key terms
 Smartphone_reviews.tk2 %>% 
   dfm() %>% 
@@ -352,7 +382,37 @@ Smartphone_reviews.tk2 %>%
 
 ```
 
-#### Link between words
+##### Chi-square table - Samsung as Target 
+
+```{r}
+## table
+Smartphone_reviews.tk2 %>% 
+  dfm() %>% 
+  dfm_group(Brand) %>% 
+  textstat_keyness(target = "Samsung") %>%
+  head(10) %>% 
+  kable(caption = "Samsung as Target") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
+
+##### Chi-square table - Apple as Target 
+
+```{r}
+Smartphone_reviews.tk2 %>% 
+  dfm() %>% 
+  dfm_group(Brand) %>% 
+  textstat_keyness(target = "Apple") %>%
+  head(10) %>% 
+  kable(caption = "Apple as Target") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
+
+## {-}
+
+
+#### **Link between words**
 
 To get an idea of the relationship between words - what are the most common combination - we decided to present a visual representation of those links. From the following graph we interpret that the majority of the most common words are linked directly with the term "phone" - this of course makes sense as we are working on phones reviews. It can be noted however that on the outer reach of this plot terms such as - perfect, excellent, recommend, happy - are reviews that mostly appears only with one token. This could explain the reason why on this graph these terms do not appear with links to others tokens. 
 
@@ -375,187 +435,6 @@ network <- graph_from_adjacency_matrix(
 plot(network,
      layout = layout_with_kk)
 
-```
-
-
-### Topic Modeling
-
-#### LSA on TF (DFM)
-
-```{r, warning=FALSE}
-Smartphone_reviews.lsa <- textmodel_lsa(
-  x = Smartphone_reviews.dfm.group,
-  nd = 10) 
-
-head(Smartphone_reviews.lsa$docs)
-head(Smartphone_reviews.lsa$features)
-
-n.terms <- 5
-
-## For Dimension 2
-w.order <- sort(Smartphone_reviews.lsa$features[, 2], decreasing = TRUE)
-w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-## For Dimension 3
-w.order <- sort(Smartphone_reviews.lsa$features[,3], decreasing = TRUE)
-w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-
-w.top2
-w.top3
-
-w.subset <- Smartphone_reviews.lsa$features[
-    c(unique(c(names(w.top2), names(w.top3)))), 2:3]
-
-biplot(
-  y = Smartphone_reviews.lsa$docs[, 2:3],
-  x = w.subset,
-  col = c("black","red"),
-  cex = c(0.8, 0.8),
-  xlab = "Dim 2",
-  ylab = "Dim 3")
-```
-
-#### LSA on TF (TF-IDF)
-
-```{r, warning=FALSE}
-Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
-                                         nd = 10) 
-head(Smartphone_reviews.lsa2$docs)
-head(Smartphone_reviews.lsa2$features)
-Smartphone_reviews.lsa2$sk
-
-n.terms <- 5
-w.order <- sort(Smartphone_reviews.lsa2$features[,2], decreasing = TRUE)
-w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-
-w.order <- sort(Smartphone_reviews.lsa2$features[,3], decreasing = TRUE)
-w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-
-w.subset <- Smartphone_reviews.lsa2$features[c(unique(c(names(w.top2), names(w.top3)))),2:3]
-biplot(
-  y = Smartphone_reviews.lsa2$docs[,2:3],
-  x = w.subset,
-  col = c("black", "red"),
-  cex = c(0.8, 0.8),
-  xlab = "Dim 2",
-  ylab="Dim 3")
-```
-
-
-#### LDA Using quanteda
-
-```{r}
-# Term-Topic Analysis
-library(seededlda)
-
-set.seed(123)
-Smartphone_reviews.lda <- textmodel_lda(x = Smartphone_reviews.dfm.group, k = 5)
-seededlda::terms(Smartphone_reviews.lda, 5)
-seededlda::topics(Smartphone_reviews.lda)
-seededlda::topics(Smartphone_reviews.lda) %>% table()
-
-# Term-Topic Analysis
-phi.long <- melt(
-  Smartphone_reviews.lda$phi,
-  varnames = c("Topic", "Term"),
-  value.name = "Phi") 
-
-p1 <- phi.long %>% 
-  group_by(Topic) %>% 
-  top_n(10, Phi) %>% 
-  ggplot(aes(reorder_within(Term, Phi, Topic), Phi, fill=Topic)) + 
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
-  facet_wrap(~ Topic, scales = "free_y") +
-  scale_x_reordered() + 
-  xlab("Term") + 
-  theme(
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 8))
-
-# Topic-Document Analysis
-
-set.seed(123)
-theta.long <- melt(
-  Smartphone_reviews.lda$theta,
-  varnames = c("Doc", "Topic"),
-  value.name = "Theta")
-
-p2 <- theta.long %>% 
-  group_by(Topic) %>% 
-  top_n(10, Theta) %>% 
-  ggplot(aes(reorder_within(Doc, Theta, Topic), Theta, fill=Topic)) + 
-  geom_col(show.legend = FALSE) +
-  coord_flip()+
-  facet_wrap(~ Topic, scales = "free_y") +
-  scale_x_reordered() + 
-  xlab("Document") + 
-  theme(
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 8))
-
-p1/p2
-
-
-
-ggplot(theta.long,
-       aes(x = Theta,
-           y = Doc,
-           fill = Topic)) + 
-  geom_bar(stat="identity") +
-  ylab("Model") 
-```
-
-
-##### LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -
-
-```{r}
-# Most Prevalent Topic
-rev(sort(colSums(Smartphone_reviews.lda$theta)/sum(Smartphone_reviews.lda$theta)))
-
-# Topic Coherence
-speech.codo <- fcm(
-  Smartphone_reviews.dfm.group, 
-  context = "document",
-  count = "boolean",
-  tri = FALSE) # co-document frequencies
-term.mat <- seededlda::terms(Smartphone_reviews.lda, 5)
-Coh <- rep(0, 5)
-names(Coh) <- paste0("Topic", 1:5)
-for (k in 1:5) {
-  D.mat <- t(speech.codo[term.mat[,k], term.mat[,k]])
-  D.vec <- Smartphone_reviews.dfm.group %>% 
-    textstat_frequency %>% 
-    filter(feature %in% term.mat[, k]) %>% 
-    data.frame %>%
-    select(feature, docfreq)
-  for (m in 2:5){
-    for (l in 1:(m - 1)) {
-      vm <- term.mat[m, k]
-      vl <- term.mat[l, k]
-      Coh[k] <- Coh[k] + log((D.mat[vm, vl] + 1) / filter(D.vec, feature == vl)$docfreq)
-    }
-  }
-}
-rev(sort(Coh))
-
-# See coherent Topic
-as.matrix(speech.codo[term.mat[, 2], term.mat[, 2]])
-
-# See least coherent Topic
-as.matrix(speech.codo[term.mat[, 1], term.mat[, 1]])
-
-
-# Exclusivity of the topic
-excl <- rep(0, 5)
-names(excl) <- paste0("Topic", 1:5)
-for (k in 1:5) {
-  for (i in 1:length(term.mat[,k])) {
-    term.phi <- filter(phi.long, Term == term.mat[i,k])
-    excl[k] <- excl[k] + filter(term.phi, Topic == "topic1")$Phi / sum(term.phi$Phi)
-  }
-  excl[k] <- excl[k] / length(term.mat[, k])
-}
-rev(sort(excl))
 ```
 
 

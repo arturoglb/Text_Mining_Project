@@ -1,6 +1,6 @@
 source(here::here("script/setup.R"))
-source(here::here("script/sentiment_analysis/sentiment_function.R"))
-source(here::here("script/sentiment_analysis/value_function.R"))
+source(here::here("script/functions/sentiment_function.R"))
+source(here::here("script/functions/value_function.R"))
 
 # # This analysis doesn't use the tidyverse/quanteda package for sentiments. It
 # # returns positive, negative and neg_pos values. We prefer working with more 
@@ -39,6 +39,13 @@ samsung_token <- samsung %>%
                 to_lower = TRUE,
                 strip_punct = TRUE,
                 strip_numeric = TRUE)
+
+# # Get sentiment per review
+sentimentr_per_review <- get_sentences(all_reviews) %>% 
+  sentiment() %>% 
+  group_by(review_id = element_id, Brand, Model) %>%
+  summarise(sentimentr_value = mean(sentiment)) %>% 
+  ungroup()
 
 # # Get sentiment analysis: Apple vs. Samsung
 # Sentiment based using "nrc" dictionary
@@ -102,6 +109,7 @@ sentimentr_per_model <- all_reviews %>%
   group_by(Model) %>%
   do(data.frame(val=value_function(data_text=.))) 
 
+# Rbind afinn_per_model and sentimentr_per_model
 sentiment_value_per_model <- rbind(afinn_per_model, sentimentr_per_model)
 
 # Add count of reviews to be displayed as subtitle in facet_wrap graphs
@@ -171,3 +179,6 @@ ggplot(sentimentr_apple_models, aes(y = val.value)) +
         axis.text.x = element_blank(),
         strip.text = element_text(size=7)) +
   facet_wrap(vars(Type))
+
+# Save sentimentr value for each review in a dataset
+write.csv(sentimentr_per_review, "script/sentiment_analysis/sentiment_data/sentimentr_per_review.csv")
