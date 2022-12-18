@@ -17,7 +17,7 @@ packages <- c(
   "readxl", "readr", # read files
   "irlba", "sentimentr", "quanteda.textmodels", "quanteda.textplots",
   "ranger", "caret", "text2vec", "stringi", "jsonlite", "reticulate", 
-  "spacyr", "word2vec", "seededlda", # for analysis
+  "spacyr", "word2vec", "seededlda", "cluster", # for analysis
   "sentimentr", # for sentiments
   "rio", # data import/export
   "caret", "caTools", "randomForest" # for supervised learning
