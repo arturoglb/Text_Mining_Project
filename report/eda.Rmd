@@ -162,6 +162,24 @@ Smartphone_reviews.tk <- Smartphone_reviews.tk %>%
   tokens_replace(
   pattern = hash_lemmas$token,
   replacement = hash_lemmas$lemma)
+#-----------------------------------------------------------------------
+#Creating tokens Group
+Smartphone_reviews.tk.group <- tokens(
+  Smartphone_reviews.cp.group,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_separators = TRUE) %>%
+  tokens_tolower() %>%
+  tokens_remove(stop_words$word)
+
+#lemmatization of words
+
+Smartphone_reviews.tk.group <- Smartphone_reviews.tk.group %>%  
+  tokens_replace(
+  pattern = hash_lemmas$token,
+  replacement = hash_lemmas$lemma)
+#--------------------------------------------------------------------------
 
 ## Compute the DTM, TF-IDF and global frequencies
 Smartphone_reviews.dfm <- dfm(Smartphone_reviews.tk)

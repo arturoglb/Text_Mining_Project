@@ -1,5 +1,8 @@
 source(here::here("script/setup.R"))
 
+# # Read all reviews
+all_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
 # # Read embedded document matrix
 embedded_documents <- select(read.csv(here::here("script/unsupervised_learning/embedding/embedding_data/embedded_documents.csv")), -X)
 
@@ -7,6 +10,8 @@ embedded_documents <- select(read.csv(here::here("script/unsupervised_learning/e
 set.seed(650)
 number_of_centers <- 7
 all_reviews_clustering <- kmeans(embedded_documents, centers = number_of_centers, nstart = 20)
+
+# Store size of clusters
 cluster_size <- tibble(cluster = seq(1:number_of_centers),
                        number_of_reviews = all_reviews_clustering$size)
 
@@ -50,10 +55,11 @@ cluster_topics <- all_reviews %>%
   mutate(cluster_header = paste0("Cluster ", cluster, "\nn_reviews = ", number_of_reviews, ", n_words = ", round(n/freq), "\nav_length = ", round(round(n/freq)/number_of_reviews, 2)))
 
 # Plot top words per cluster
-ggplot(cluster_topics, aes(x = freq, y = reorder_within(word, freq, cluster, sep = "_"))) +
+cluster_topics <- ggplot(cluster_topics, aes(x = freq, y = reorder_within(word, freq, cluster, sep = "_"))) +
   geom_col() +
   facet_wrap(vars(cluster_header), scale = "free_y") +
   ylab("") +
   xlab("Frequency in percentage") +
   ggtitle("Topic analysis: Top 15 words per cluster of documents",
-          subtitle = "Numbers, punctuation and stop words have been removed\nOnly words appearing at least 3 times are shown in the graph")
+          subtitle = "Numbers, punctuation and stop words have been removed\nOnly words appearing at least 3 times are shown in the graph") +
+  theme(text = element_text(size=8))
