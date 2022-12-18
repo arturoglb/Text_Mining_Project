@@ -1,0 +1,127 @@
+---
+title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
+author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    theme:
+      bootswatch: united
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r, include=FALSE}
+source(here::here("script/unsupervised_learning/clustering/document_clustering.R"))
+```
+
+# Clustering of documents
+
+In this section, we are using our previously created embedded document
+matrix in order to cluster documents together. In theory, the clustering
+should generate groups of similar documents. This is useful to
+understand the main topics and themes discussed by customers in their
+reviews.
+
+For the clustering approach, we decided to create a total of 7 groups
+with `nstart=20`. The graph below includes a subset of 500 reviews
+showing the results.
+
+```{r, eval=FALSE, echo=TRUE}
+# # Read all reviews
+all_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+
+# # Read embedded document matrix
+embedded_documents <- select(read.csv(here::here("script/unsupervised_learning/embedding/embedding_data/embedded_documents.csv")), -X)
+
+# # Clustering of documents
+set.seed(650)
+number_of_centers <- 7
+all_reviews_clustering <- kmeans(embedded_documents, centers = number_of_centers, nstart = 20)
+
+# Store size of clusters
+cluster_size <- tibble(cluster = seq(1:number_of_centers),
+                       number_of_reviews = all_reviews_clustering$size)
+```
+
+```{r, echo=FALSE, fig.align='center', out.width='70%'}
+clusplot(embedded_documents[subset_index,],
+         all_reviews_clustering$cluster[subset_index],
+         lines = 0,
+         span = TRUE,
+         shade = TRUE,
+         color = TRUE,
+         main = "Document clustering using document embedding")
+```
+
+In order to capture the topics discussed in each cluster, we decided to:
+
+-   Tokenize the reviews (remove punctuation, lowercasing and removing
+    numbers)
+-   Remove stop words
+-   Group by cluster and count word occurrence and frequency
+-   Keep words with occurrences higher than 3
+-   Keep the top 15 (max) per cluster
+-   Graph the results
+
+```{r, eval=FALSE, echo=TRUE}
+# Create dataset for plotting: Get top words per cluster
+cluster_topics <- all_reviews %>% 
+  mutate(review_id = seq(1:nrow(all_reviews))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                input = "Reviews",
+                to_lower = TRUE,
+                strip_punct = TRUE,
+                strip_numeric = TRUE) %>% 
+  filter(word %notin% stop_words$word) %>% 
+  group_by(cluster, word) %>% 
+  tally() %>% 
+  mutate(freq = n/sum(n)) %>% 
+  filter(n >= 3) %>% 
+  arrange(cluster, desc(freq)) %>% 
+  top_n(15, freq) %>% 
+  left_join(cluster_size, by = c("cluster" = "cluster")) %>% 
+  mutate(cluster_header = paste0("Cluster ", cluster, "\nn_reviews = ", number_of_reviews, ", n_words = ", round(n/freq), "\nav_length = ", round(round(n/freq)/number_of_reviews, 2)))
+```
+
+```{r, out.width='100%', fig.height=6}
+# Plot top words per cluster
+cluster_topics
+```
+
+Thanks to the results of the clustering approach, we are able to observe
+several patterns in the reviews.
+
+1.  Cluster size is not uniformly distributed
+2.  The average length of reviews varies from a cluster to another (min
+    = 0.43, max = 19.87)
+3.  Cluster 1 seems to group longer reviews and general comments about
+    the battery, screen, place of purchase and return conditions. This
+    cluster might include all the reviews where customers describe their
+    overall experience in order to inform future purchasers.
+4.  Cluster 4 is similar to cluster 1 but is slightly more oriented
+    towards the phones' conditions after a certain usage period
+    (scratch, condition, charger, protector).
+5.  Cluster 5 has slightly shorter reviews and seems to have a focus on
+    battery and battery life. Further investigation would be needed but
+    it could be that the overall sentiment of that group of reviews is
+    positive since it also includes several occurrences of words such as
+    `excellent`, `perfect` and `perfectly`.
+6.  Cluster 3 seems to group reviews of happy customers that are willing
+    to share on their experiences ('promoters').
+7.  Cluster 2 and 6 appears to contain comments of happy customers that
+    wanted to express their satisfaction in a very concise manner (short
+    reviews).
+8.  Finally, cluster 7 seems to be grouping bad comments about speakers'
+    quality.
+
+As we can see, it seems that the clustering managed to surface groups of
+positive comments. However, it is quite surprising to see that the only
+cluster of negative comments contains only 203 reviews and mostly talks
+about the quality of the media play and speakers. It would be worth
+analyzing large clusters that do not seem to surface particular sign of
+satisfaction to better understand their content (1, 4, 5). Some
+approaches include increasing the number of clusters or 'cluster the
+clusters of interest'.
