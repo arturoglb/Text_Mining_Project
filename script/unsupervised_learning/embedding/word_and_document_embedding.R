@@ -1,5 +1,5 @@
 source(here::here("script/setup.R"))
-source(here::here("document_embedding"))
+source(here::here("script/functions/document_embedding_function.R"))
 library(uwot)
 library(ggrepel)
 library(plotly)
@@ -29,13 +29,14 @@ df  <- data.frame(word = gsub("//.+", "", rownames(embedded_words)),
 
 # Subset the dataframe
 set.seed(456)
-df  <- df[sample(1:nrow(df), 1500),]
+nb_words_to_display <- 1500
+df  <- df[sample(1:nrow(df), nb_words_to_display),]
 
 # Interactive 2D plot
-plot_ly(df, x = ~x, y = ~y, type = "scatter", mode = "text", text = ~word)
+graph_2d <- plot_ly(df, x = ~x, y = ~y, type = "scatter", mode = "text", text = ~word)
 
 # Interactive 3D plot
-plot_ly(df, x = ~x, y = ~y, z = ~z, type = "scatter3d", mode = 'text', text = ~word)
+graph_3d <- plot_ly(df, x = ~x, y = ~y, z = ~z, type = "scatter3d", mode = 'text', text = ~word)
 
 # # Embed text using word embedding
 # Remove punctuation
@@ -47,9 +48,13 @@ document_words <- lapply(strsplit(tolower(all_reviews_sentences), " "), trimws)
 # Document embedding
 embedded_documents <- lapply(X = document_words, FUN = document_embedding, embedded_words_matrix = embedded_words)
 
-# Transform list into matrix
+# # Transform list into matrix
+# Creating a names vector to enable bind_rows function to work 
 names(embedded_documents) <- 1:length(embedded_documents)
 embedded_documents <- t(bind_rows(embedded_documents))
+
+# Removing attributes from the document (for cleanliness purposes)
+embedded_documents <- unname(embedded_documents)
 
 # Save embedded words and document
 write.csv(embedded_words, here::here("script/unsupervised_learning/embedding/embedding_data/embedded_words.csv"))
