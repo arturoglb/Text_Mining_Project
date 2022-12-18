@@ -8,7 +8,7 @@ editor_options:
 source(here::here("script/unsupervised_learning/clustering/document_clustering.R"))
 ```
 
-### **Clustering of documents**
+## **Clustering of documents**
 
 In this section, we are using our previously created embedded document
 matrix in order to cluster documents together. In theory, the clustering

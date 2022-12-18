@@ -9,9 +9,9 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
-## **Unsupervised Learning**
+# **Unsupervised Learning**
 
-### **Similarities**
+## **Similarities**
 
 For the unsupervised learning analysis, we will be analyzing the similarities between each of the models and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects.
 
@@ -32,7 +32,7 @@ Looking at the heatmap of the grouped reviews below, we can conclude the followi
 
 Further, we have studied the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar or further the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the most dissimilar models from all the other models.
 
-```{r}
+```{r, fig.align='center'}
 ## Euclidean
 
 # Since we are taking the Euclidean distance, we will first need to transform the distances to similarities bounded between 0-1. 
@@ -85,30 +85,42 @@ smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
-Analyzing the results of the kmeasns on 4 clusters, we can see that we have the ration of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares <br>
+Analyzing the results of the K-means on 4 clusters, we can see that we have the ratio of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares <br>
 
-##### Extract the ten words that are the most used.
+#### Extract the ten words that are the most used. {.tabset}
 
 We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about.
 
+##### Clusters based on TF-IDF - Grouped by Model {.active}
 ```{r}
 data.frame(
   Clust.1 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==1, ], 2, sum), decreasing = TRUE)[1:10]),
   Clust.2 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==2, ], 2, sum), decreasing = TRUE)[1:10]),
   Clust.3 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==3, ], 2, sum), decreasing = TRUE)[1:10]), 
   Clust.4 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.clust==4, ], 2, sum), decreasing = TRUE)[1:10])
-)
+) %>% 
+  kable(caption = "Clusters based on TF-IDF - Grouped by Model") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
 
+##### K-means Clusters based on TF-IDF - Grouped by Model
 
+```{r}
 data.frame(
   Clust.1 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==1,], 2, sum), decreasing = TRUE)[1:10]),
   Clust.2 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==2,], 2, sum), decreasing = TRUE)[1:10]),
   Clust.3 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==3,], 2, sum), decreasing = TRUE)[1:10]),
-  Clust.4 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==4,], 2, sum), decreasing = TRUE)[1:10])
-)
+  Clust.4 = names(sort(apply(Smartphone_reviews.tfidf.group[smartphone.km$cluster==4,], 2, sum), decreasing = TRUE)[1:10]) 
+) %>% 
+  kable(caption = "K-mean Clusters based on TF-IDF - Grouped by Model") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
+## {-}
 
-#### **Similarities between Words**
+
+### **Similarities between Words**
 
 Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together.
 
@@ -118,7 +130,7 @@ Then we do the similarities by words. We also create a heat map to show the simi
 
 On the other hand, if we look at the similarity matrix for the iPhone, we can see that is is similar to almost all the features that were mentioned which means that the consumers have mentioned those features evenly in their reviews. However, it is least similar to the words, "camera", "fast", and "card". Which means that these words were not mentioned a lot in the iPhone reviews with respect to other words.
 
-```{r}
+```{r, fig.align='center'}
 smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% 
   filter(rank <= 50) # words with frequency rank less than 40 (it should correspond to the 50 most frequent words 
 smartphone.feat$feature
@@ -145,7 +157,7 @@ ggplotly(ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=valu
   ylab(""))
 ```
 
-#### Clustering Words
+### **Clustering Words**
 
 The below dendrogram shows how each word is clustered and with the other words. we can c;early see four (4) clusters. As seen previously in the heatmap, the word samsung will be clustered in a cluster by itself as it is the most dissimilar word from the others.
 
@@ -154,11 +166,11 @@ smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos), method = "complet
 plot(smartphone.word.hc)
 ```
 
-#### Cooccurence
+### **Co-occurence**
 
 Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see thatthe most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram.
 
-```{r}
+```{r, fig.align='center'}
 
 #### TO CHECK IF WE SHOULD USE THE GROUPED ONE ####
 
@@ -213,11 +225,11 @@ smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ), method = "complete")
 plot(smartphone.occ.hc)
 ```
 
-### **Topic Modeling**
+## **Topic Modeling**
 
 We decided to use Topic modeling to discover the abstract "topics" that occur in a collection of documents, in this case the grouped corpus of smartphones Models (*Wikipedia,2022*). Topic Modeling will help us to identify the context of the documents by detecting similar words patterns inside them, and by clustering those group of words together.
 
-#### **LSA on Term Frequencies (DFM)** {.tabset}
+### **LSA on Term Frequencies (DFM)** {.tabset}
 
 Latent Semantic Analysis, or LSA, is one of the techniques that we will use for topic modeling. LSA is a reduction technique that decomposes the DTM into 3 matrices ($M = 𝑈Σ𝑉^{𝑡}$), where $Σ$ represents the strength of the topic, $𝑈$ the links among the document and every topic, and $𝑉^{t}$ the links between the terms and each topic.
 
@@ -227,7 +239,7 @@ On the second tab "Topics 2 and 3", we interpret which words are the top 5 assoc
 
 For a visual representation of the words stated previously on topic 2 and topic 3, we plot the dimensions that correspond to those topics (*Dim 2 & 3*) in a biplot chart. In the tab "Biplot of Dim 2 and 3" we can confirm the points mentioned before, as we note the same words associated with Dim 2 (*Topic 2*) and negatively associated, same case for Dim 3 (*Topic 3*). Samsung Galaxy S21 FE, iPhone 11 Pro Max and iPhone 11 Pro are associated with Topic 3, while iPhone 11 is unconnected to this topic. For Topic 2 we can determine that iPhone 11 Pro, iPhone 11 Pro Max, iPhone 11, and iPhone 12 are related to it.
 
-##### Dimension 1 {.active}
+#### Dimension 1 {.active}
 
 ```{r, fig.width=8}
 # Build LSA object
@@ -249,7 +261,7 @@ plot_ly(data = lsa.dim1, x = ~models.freq, y = ~dim1, color = ~names,
          legend = list(title=list(text='<b> Smartphone Models </b>')))
 ```
 
-##### Topics 2 and 3
+#### Topics 2 and 3
 
 ```{r}
 # Define the number of terms to filter
@@ -274,7 +286,7 @@ w.top3 %>%
                 fixed_thead = T) 
 ```
 
-##### Biplot of Dim 2 and 3
+#### Biplot of Dim 2 and 3
 
 ```{r}
 w.subset <- Smartphone_reviews.lsa$features[
@@ -292,7 +304,7 @@ biplot(
 
 ##  {.unnumbered}
 
-#### **LSA on Term Frequencies (TF-IDF)**
+### **LSA on Term Frequencies (TF-IDF)**
 
 Now, we apply the same approach as above, but in this case we will use the TF-IDF matrix. As we have already explain, the TF-IDF quantifies the relevance of a word in a document. First, we build the LSA object with the `textmodel_lsa` function from the `quanteda.textmodels` package with our matrix created for the TF-IDF grouped model reviews(*only 5 dimensions*). Next, we break down the data for interpretability by considering only the 5 words with the highest values and the 5 with the lowest values. Finally, we plot the Biplot to identify the Topics and its words associated and unrelated.
 
@@ -321,7 +333,7 @@ biplot(
   ylab="Dim 3")
 ```
 
-#### **LDA**
+### **LDA**
 
 Latent Dirichlet Allocation (LDA) is a topic modeling algorithm that is used to identify the topics present in a collection of documents. It is a generative model that assumes that each document is a mixture of a fixed number of topics, and that each word in the document is associated with one of the topics (*Susan Li, 2018*).
 
@@ -339,7 +351,7 @@ seededlda::terms(Smartphone_reviews.lda, 5) %>%
                 fixed_thead = T) 
 ```
 
-##### **Term-Topic Analysis**
+#### **Term-Topic Analysis**
 
 The $ϕ$ (phi) is a term-topic distribution. It represents the probability of a term occurring in a given topic. To rephrase it, for a given topic, the $ϕ$ values indicate the likelihood of each term being associated with that topic. The terms with the highest $ϕ$ values are the ones that are most strongly associated with the topic. To visualize those associations we plot the $ϕ$ values with the 10 largest probabilities terms inside each subject.
 
@@ -373,7 +385,7 @@ phi.long %>%
 
 ```
 
-##### **Topic-Document Analysis**
+#### **Topic-Document Analysis**
 
 The θ matrix (theta) is a document-topic distribution. It represents the probability of a topic occurring in a given document. To put it in another way, for a given document, the θ values indicate the likelihood of each topic being present in that document.
 
@@ -414,7 +426,7 @@ ggplot(theta.long,
 #     strip.text = element_text(size = 8))
 ```
 
-##### **LDA Diagnostics across Topics - *Prevalence, Coherence and Exclusivity* -**
+#### **LDA Diagnostics across Topics - *Prevalence, Coherence and Exclusivity* -**
 
 There are several ways to evaluate the quality of a topic model, for this case, we have consider to evaluate the LDA using metrics such as prevalence, coherence, and exclusivity.
 

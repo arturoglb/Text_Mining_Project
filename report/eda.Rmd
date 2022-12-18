@@ -9,11 +9,11 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
-## **Data Preparation**
+# **Data Preparation**
 
 This section explains the steps we did for the retrieval of the data from the US Amazon marketplace. In Addition, we will explain some of the tasks we had to apply to the text reviews in order to have the final tables. It is worth mentioning that due to the heavy computation on this section we will present the final outcomes and the examples (before and after) of the wrangling and cleaning. The code can be observed on the scrapping.RMD file.
 
-### **Data Retrieval**
+## **Data Retrieval**
 
 During this section, we have scrapped from the US Amazon marketplace the smartphone reviews of Apple and Samsung phones. We have decided to retrieve the reviews of the eleventh, twelfth, and the thirteenth generations of Apple. Also, we have consider the Generation S20, 2S21, and S22 for Samsung. The phones concerning each of the generation with the amount of reviews are described as follows:
 
@@ -60,11 +60,13 @@ smartphone_reviews[12983:12992,] %>%
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "300px")
 ```
 
-### **Reviews Language Detection** (*Text Classification*)
+## **Reviews Language Detection** (*Text Classification*) {.tabset}
 
 After scrapping the reviews from the smartphones we noticed that some of them were written in various languages other than English such as Spanish, Japanese and Hindi. For that reason, we decided to use Transformers from the Hugging Face 🤗 website throughout the `pipelines()` function in order to apply tasks such as **text classification and text translations**. First, we applied the classification task from the model [eleldar/language-detection](https://huggingface.co/eleldar/language-detection), which is a fine-tuned version of [xlm-roberta-base](https://huggingface.co/xlm-roberta-base) on the Language Identification dataset. By using this model we were able to detect the language of the reviews from our dataset.
 
 After the application of the task `text-classification` and the model to the dataset, we created a column called *Language* to determine the language and the amount of reviews of each of them.
+
+### Apple reviews {.active}
 
 ```{r}
 apple_class <- read.csv(here::here("data/apple_class.csv"))
@@ -72,20 +74,28 @@ samsung_class <- read.csv(here::here("data/samsung_class.csv"))
 
 # Plot Table
 apple_class[1239:1244,] %>%
-  kable(caption = "Appe reviews - Language Detection") %>%
+  kable(caption = "Apple reviews - Language Detection") %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
+
+### Samsung reviews
+
+```{r}
 samsung_class[51:57,] %>%
   kable(caption = "Samsung reviews - Language Detection") %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
+## {-}
 
-### **Reviews Language Translation**
+## **Reviews Language Translation** {.tabset}
 
 For this part, we used the task for `text translations` from the model [Helsinki-NLP/opus-mt-es-en](https://huggingface.co/Helsinki-NLP/opus-mt-es-en?text=Me+llamo+Wolfgang+y+vivo+en+Berlin), which helped us to translate the reviews written in Spanish to English. We have only considered to translate this language because it was the second most representative language in our data. Languages like French, Japanese, and Hindi that we identified in our data had less than 10 observations.
 
 For visualization purposes, we have combined both tables (input and output), to show how the translation was executed. This means that we kept only the reviews translated to English for our Analysis.
+
+### Apple reviews {.active}
 
 ```{r}
 apple_es <- read.csv(here::here("data/apple_es.csv"))
@@ -100,7 +110,11 @@ both_apple[19:24,] %>%
   kable(caption = "Apple reviews - Language Translation") %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
 
+### Samsung reviews
+
+```{r}
 # Samsung
 s <- list(a=samsung_es,b=samsung_es_en)
 both_samsung <- do.call(rbind, s)[order(sequence(sapply(s, nrow))), ]
@@ -109,12 +123,13 @@ both_samsung[1:6,] %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
+##{-}
 <br>
 After dealing with the steps explained above, we have transformed our files from having reviews with different languages to a final file with reviews in English. Thus, the number of reviews has slightly decreased, in the case of Apple from **12,965 obs to 12,712 obs**, and in the case of Samsung from **2,606 obs to 2,585**.
 
-## **Exploratory Data Analysis**
+# **Exploratory Data Analysis**
 
-### **Tokenization and Cleaning**
+## **Tokenization and Cleaning** {.tabset}
 
 Now that we have all our text in English solely, we can start processing our dataset to transform it into a corpus. The second step is to create tokens - each token will be assigned a word. To get rid of non conforming formats, we are removing in our corpus any _punctuation_; _symbols_; _numbers_; and _separators_. To have a better analysis we also decided to remove _"stop words"_ which correspond to parasite words such as _"a"_, _"the"_, and others that do not add value to the analysis. Finally instead of using a steming method, we decided to proceed with the lemmatization technique - this correspond to the usage of a lexicon dictionary that will look for the root of words, in order to get rid of unimportant repetition with minor change such as teach-teaching-taught will all be reduced to the root teach. Prior to continue with graphical representation, we also compute the following information:
 
@@ -123,6 +138,8 @@ Now that we have all our text in English solely, we can start processing our dat
 * Global Frequency corresponds to the frequency of each words for each document by rank.
 
 Below you will find two tables representing the corpus text of smartphones reviews that we are going to use. The first one is representing the corpus summary (*the text column shows the Model name with the numeration of each review across the dataset so we could identify them*) while the second one is grouped by Model type.
+
+### Corpus Summary
 
 ```{r}
 Smartphone_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
@@ -138,7 +155,11 @@ summary(Smartphone_reviews.cp) %>% head(10) %>%
   kable(caption = "Corpus Summary") %>%
   kable_styling(bootstrap_options = c("striped","hover","condensed"),
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
+```
 
+### Corpus Group by Model Summary
+
+```{r}
 # Creating Corpus by Group Model
 Smartphone_reviews.cp.group <- corpus_group(Smartphone_reviews.cp, groups = Model)
 summary(Smartphone_reviews.cp.group) %>% 
@@ -192,9 +213,10 @@ Smartphone_reviews.tfidf.group <- dfm_tfidf(Smartphone_reviews.dfm.group)
 Smartphone_reviews.freq.group <- textstat_frequency(Smartphone_reviews.dfm.group)
 
 ```
+## {-}
 <br>
 
-#### **Plotting frequency**
+### **Plotting Frequency**
 
 Observing the frequency plot we can analyse that the most common word used was "phone" followed by "battery" and "screen". While phone comes without surprise as  we got our information from phones reviews on amazon, an interesting point came from the two most used words afterwards. Indeed, we can deduce from this graph that the hottest topic for a consumers is the battery life of a new phone and the quality of its screen rather than the software behind it nor the features added. 
 
@@ -211,7 +233,7 @@ Smartphone_reviews.freq %>%
   theme(legend.position="none")
 ```
 
-**Models Frequency based on DFM - Ungrouped**
+#### **Models Frequency based on DFM - Ungrouped**
 
 This graph focused on the frequency of the 5 more common words used for each of the documents available. An interesting thing, to note is that in our dataset more than 80% of the reviews came from apple buyers. Nonetheless, in this sample showed, it appears that most words used are related to android instead of IOS. Another interesting fact to note is that the most common words used all throughout the corpus are - samsung, s9, s20, phone, onplus, entry, device, camera, apple.
 
@@ -230,11 +252,11 @@ Smartphone_reviews.dfm %>%
   scale_fill_discrete(name = "Term")
 ```
 
-**Models Frequency based on DFM - Grouped by Model**
+#### **Models Frequency based on DFM - Grouped by Model**
 
 We observed that the Models chosen by the DFM on the top part of the chart are the ones with the highest amount of Tokens. The common ground across the models is the impression that customers talked about the phone and in some cases about the seller. As an example, we discover that on the iPhone 11 some of the reviews were about the conditions of the smartphones as they were refurbished and users were praising the seller or product or complaining about what they had received. Some of the top 5 terms that were used were - screen, scratch, phone, iphone, buy, battery - this concurs with the previous understanding. Furthermore, the usage of the term **phone** is used among all models while **scratch** is mostly used in iPhone 11 reviews. 
 
-**Models Frequency based on TF-IDF - Grouped by Model**
+#### **Models Frequency based on TF-IDF - Grouped by Model**
 
 On the bottom part of the chart, we have the same models as seen on top, but the difference lies on the relevance on the token used in regard to the review. This implies that the terms shown explain the main context of the review. Thereby, iPhone 11 model was explained by **scratch** as the main theme of the reviews, meanwhile, for Samsung Galaxy S21 FE is all about comparison  with the previous model (Samsung Galaxy S20 FE). Also we detected that the iPhone 11 Pro's reviews followed the same pattern as the iPhone 11, but with the main difference being the terms **aesthetic and generic**.
 
@@ -271,7 +293,7 @@ p1/p2
 
 ```
 
-#### **Plotting maximum TF_IDF per document**
+### **Plotting maximum TF_IDF per Document**
 
 Due to the large amount of reviews, we decided to create a visualization of the max TF-IDF for each documents instead of showing each one of them. Thereby, the following representation tell us that each of those words have at least a large TF-IDF in on document. Analyzing the output, entry seems to be the word having the most relevance followed then by "oneplus" "s9" "s20". While the words ranked 2 to 4 are all specific to model, it turns out that "entry" is what matters the most for consumers. Entry in the context of purchase might correspond to leader price. 
 
@@ -285,11 +307,12 @@ Smartphone_reviews.tfidf %>%
   arrange(desc(count)) %>%
   top_n(20, count) %>%
   ggplot(aes(x=reorder(term, count),
-             y = count)) + 
+             y = count, fill=term)) + 
   geom_bar(stat = "identity") + 
   coord_flip() +
   xlab("Max TF-IDF") + 
-  ylab("Term")
+  ylab("Term") +
+  theme(legend.position="none")
 ```
 
 We applied the same procedure as the chart above, but in this case we chose to group the documents by Model so we could identify which terms have the largest TF-IDF on each smartphone. From the chart, we can interpret the following:
@@ -314,7 +337,7 @@ Smartphone_reviews.tfidf.group %>%
 ```
 
 
-#### **Document log frequency**
+### **Document Log Frequency**
 
 While this log frequency representation is quite messy due to the amount of documents used, we can still distinguish the tokens found during the frequency plot representation. It is very clear indeed that the words phone, battery, and screen are the most common words used and are present in nearly every document. On the other hand, we observe - entry - having a lesser document frequency, meaning that it appears less often, while still maintaining a decent log-frequency implying that it is specific to some documents only. 
 
@@ -330,7 +353,7 @@ Smartphone_reviews.freq %>%
 ```
 
 
-#### **Words Cloud**
+### **Words Cloud**
 
 Another representation of the Document frequency matrix is through a word cloud, where the the most relevant words has the biggest size. From this cloud, we can identify - phone, battery, screen, iPhone, scratch, condition - as the most used words.
 
@@ -339,7 +362,7 @@ textplot_wordcloud(Smartphone_reviews.dfm)
 ```
 
 
-#### **Lexical diversity**
+### **Lexical diversity**
 
 We now want to take a glance a the diversity of words used. This is an interesting approach as it allows us to see if reviews are rich in vocabulary or if instead, they are repetitive. Due to the number of documents, we will only show a sample. A limitation of this representation is that the lexical diversity is dependent on the size of the sentence, in this case the reviews. Nonetheless it can provide us with insights on how diverse the reviewers are in term of words used. The highest the TTR the more diverse the lexicon is. 
 
@@ -357,7 +380,7 @@ Smartphone_reviews.dfm.group %>% textstat_lexdiv() %>%
 
 ```
 
-#### **Keyness** {.tabset}
+### **Keyness** {.tabset}
 
 To continue with our analysis we decided to apply a Chi-square test of independence between Apple's and Samsung's reviews. The purpose of this test is to compare term from a set of document to another, in this case we want to put in perspective terms used from one consumers base to an others. We created a plot with the keyness results, we also added for reference two tables containing the 10 first values from the Chi-square test for both Samsung and Apple as target. 
 
@@ -378,7 +401,7 @@ as for Apple:
 * Iphone Pro
 * Iphone SE
 
-##### Key terms of Apple vs Samsung {.active}
+#### Key terms of Apple vs Samsung {.active}
 ```{r, fig.width=10}
 ## Key terms of Apple vs Samsung
 ## Take a sub-corpus and clean it
@@ -400,7 +423,7 @@ Smartphone_reviews.tk2 %>%
 
 ```
 
-##### Chi-square table - Samsung as Target 
+#### Chi-square table - Samsung as Target 
 
 ```{r}
 ## table
@@ -414,7 +437,7 @@ Smartphone_reviews.tk2 %>%
                 fixed_thead = T) %>% scroll_box(width = "100%", height = "250px")
 ```
 
-##### Chi-square table - Apple as Target 
+#### Chi-square table - Apple as Target 
 
 ```{r}
 Smartphone_reviews.tk2 %>% 
@@ -430,7 +453,7 @@ Smartphone_reviews.tk2 %>%
 ## {-}
 
 
-#### **Link between words**
+### **Link between words**
 
 To get an idea of the relationship between different words such as the most common combinations available,  we decided to present a visual representation of those links. From the following graph we reconfirm that all the reviews are related to the term _phone_. It can be noted however, that on the outer reach of this plot, terms such as perfect, excellent, recommend, happy, and others are reviews that mostly appear only with one token, so they are reviews with only one word as a feedback. This could explain the reason why on this graph these terms do not appear with links to others tokens. 
 

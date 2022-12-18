@@ -1,5 +1,5 @@
 ---
-title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
+title: "Analyzing Product Reviews for Apple and Samsung Phones: A Comparative Study"
 author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:

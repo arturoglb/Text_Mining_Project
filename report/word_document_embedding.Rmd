@@ -8,7 +8,7 @@ editor_options:
 source(here::here("script/unsupervised_learning/embedding/document_embedding.R"))
 ```
 
-### **Word Embedding**
+## **Word Embedding**
 
 The word embedding has been applied on our three reviews datasets: smartphone_reviews_final.csv, Apple_final.csv, and Samsung_final.csv. To embed words into 50-dimension vectors, we have decided to apply the `word2vec::word2vec` function using the `cbow` method with 30 iterations.
 
@@ -66,7 +66,7 @@ graph_2d
 graph_3d
 ```
 
-### **Document embedding**
+## **Document Embedding**
 
 We pre-processed the documents (reviews) by removing punctuation, lowercasing and splitting them into individual words. We then used the results from the word embedding to embed each review using the following function:
 
