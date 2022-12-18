@@ -267,8 +267,6 @@ For a visual representation of the words stated previously on topic 2 and topic 
 ##### Dimension 1 {.active}
 
 ```{r, fig.width=8}
-library(plotly)
-
 # Build LSA object
 Smartphone_reviews.lsa <- textmodel_lsa(
   x = Smartphone_reviews.dfm.group,
@@ -333,6 +331,9 @@ biplot(
 
 #### **LSA on Term Frequencies (TF-IDF)**
 
+Now, we apply the same approach as above, but in this case we will use the TF-IDF matrix. As we have already explain, the TF-IDF quantifies the relevance of a word in a document. First, we build the LSA object with the `textmodel_lsa` function from the package `quanteda.textmodels` with our matrix created for the TF-IDF grouped model reviews(*only 5 dimensions*). Next, we break down the data for interpretability by considering only the 5 words with the highest values and the 5 with the lowest values. Finally, we plot the Biplot to identify the Topics and its words associated and unrelated.
+
+What we discover is that Topic 2 (*Dim 2*) is associated to the words "scratch", "iphone", "generic", "health", "renew" and the models iPhone 11 Pro, iPhone 11, iPhone 11 Pro Max. Thereby, is unrelated to terms such as "s21", "s8", "samsung", "s20", "fe" and the model Samsung Galaxy S21 FE. For Topic 3 (*Dim 3*) we see a relation with terms like "aesthetic", "mica", "generic", "pro", "max" and 
 
 
 ```{r, warning=FALSE}

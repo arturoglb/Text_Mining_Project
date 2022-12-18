@@ -10,7 +10,8 @@ packages <- c(
   "tidyverse", "tidytext", "wordcloud", "lexicon", "quanteda", "quanteda.textstats",
   "tm", "ggrepel", "udpipe", "widyr", "textdata", "reshape2",  # for wrangling
   "rvest", "magick", "pdftools", # web scrapping
-  "ggplot2", "patchwork", "broom", "ggwordcloud", "igraph", "patchwork", # for plotting
+  "ggplot2", "patchwork", "broom", "ggwordcloud", "igraph", "patchwork",
+  "plotly", # for plotting
   "knitr", "kableExtra", "bookdown", "rmarkdown", "bslib", "summarytools",
   "flextable", # for the report
   "readxl", "readr", # read files
