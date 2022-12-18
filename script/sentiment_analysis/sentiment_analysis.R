@@ -54,14 +54,20 @@ for (i in list(apple_token, samsung_token)){
   sentiment_analysis <- sentiment_function(i, "review_id", "sentiment")
   
   # Print the plot
-  print(ggplot(tibble(sentiment = names(colSums(sentiment_analysis)),
-                sum_value = colSums(sentiment_analysis)),
-         aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
+  sentiment_plot <- ggplot(tibble(sentiment = names(colSums(sentiment_analysis)),
+                                  sum_value = colSums(sentiment_analysis)),
+                           aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
     geom_col() +
-    ggtitle("Sentiment analysis results (nrc dictionary)", subtitle = i$Brand[1]) +
+    ggtitle(i$Brand[1]) +
     ylab("Number of tokens") +
-    xlab("Sentiment"))
+    xlab("Sentiment") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
+  
+  # Assign graph
+  assign(paste0("sentiment_", i$Brand[1]), sentiment_plot)
 }
+
+sentiment_Apple + sentiment_Samsung + plot_annotation(title = "Sentiment analysis results (nrc dictionary)")
 
 # Value based using "afinn" dictionary and "sentimentr"
 # Valence shifter: https://www.r-bloggers.com/2020/04/sentiment-analysis-in-r-with-sentimentr-that-handles-negation-valence-shifters/
@@ -72,16 +78,23 @@ for (i in list(apple_token, samsung_token)){
   value_analysis <- value_function(data_list[[index]]$Reviews, i, review_id, value)
   
   # Print the plot
-  print(ggplot(value_analysis, aes(y = value, fill = variable)) +
-      geom_boxplot() +
-      ylab("Average sentiment value") +
-      ggtitle("Sentiment analysis results (afinn dictionary and sentimentr)", subtitle=i$Brand[1]) +
-      scale_y_continuous(breaks = seq(0,5,0.2), limits = c(0,5)) +
-      guides(fill=guide_legend("Sentiment method")))
+  value_plot <- ggplot(value_analysis, aes(y = value, fill = variable)) +
+    geom_boxplot() +
+    ylab("Average sentiment value") +
+    ggtitle(i$Brand[1]) +
+    scale_y_continuous(breaks = seq(0,5,0.2), limits = c(0,5)) +
+    guides(fill=guide_legend("Sentiment method")) +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank())
+  
+  # Assign graph
+  assign(paste0("value_", i$Brand[1]), value_plot)
   
   # Increment index
   index <- index + 1
 }
+
+value_Apple + value_Samsung + plot_annotation(title = "Sentiment analysis results (afinn dictionary and sentimentr package)")
 
 # # Facet graph of all models
 # Perform sentiment analysis per model (nrc dictionary)
@@ -91,13 +104,13 @@ sentiment_per_model <- all_reviews_token %>%
   group_by(Model, val.Var2) %>% 
   summarise(sum_value = sum(val.Freq))
 
-ggplot(sentiment_per_model, aes(x = reorder(val.Var2, -sum_value), y = sum_value)) +
+model_nrc <- ggplot(sentiment_per_model, aes(x = reorder(val.Var2, -sum_value), y = sum_value)) +
   geom_col() +
   ggtitle("Sentiment analysis results (nrc dictionary)", subtitle = "Per model") +
   ylab("Number of tokens") +
   xlab("Sentiment") +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
-        strip.text = element_text(size=7)) +
+        text = element_text(size=7)) +
   facet_wrap(vars(Model), scales = "free_y")
 
 # Perform the sentiment value analysis per model (afinn dictionary and sentimentr)
@@ -120,36 +133,36 @@ sentiment_value_per_model <- sentiment_value_per_model %>%
   unite(Model, c(Model, review_count), sep='\n')
 
 # Print the plot (afinn dictionary)
-ggplot(sentiment_value_per_model %>% filter(val.variable == "afinn_value"), aes(y = val.value)) +
+model_afinn <- ggplot(sentiment_value_per_model %>% filter(val.variable == "afinn_value"), aes(y = val.value)) +
   geom_boxplot() +
   ylab("Average sentiment value") +
-  ggtitle("Sentiment analysis results (afinn dictionary)", subtitle = "Per model (+ number of reviews") +
+  ggtitle("Sentiment analysis results (afinn dictionary)", subtitle = "Per model (+ number of reviews)") +
   scale_y_continuous(breaks = seq(-5,5,1), limits = c(-5,5)) +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
-        strip.text = element_text(size=7)) +
+        text = element_text(size=7)) +
   facet_wrap(vars(Model))
 
 # Print the plot (sentimentr package)
-ggplot(sentiment_value_per_model %>% filter(val.variable == "sentimentr_value"), aes(y = val.value)) +
+model_sentimentr <- ggplot(sentiment_value_per_model %>% filter(val.variable == "sentimentr_value"), aes(y = val.value)) +
   geom_boxplot() +
   ylab("Average sentiment value") +
-  ggtitle("Sentiment analysis results (sentimentr package)", subtitle = "Per model (+ number of reviews") +
+  ggtitle("Sentiment analysis results (sentimentr package)", subtitle = "Per model (+ number of reviews)") +
   scale_y_continuous(breaks = seq(-3,3,1), limits = c(-3,3)) +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
-        strip.text = element_text(size=7)) +
+        text = element_text(size=7)) +
   facet_wrap(vars(Model))
 
 # Print the plot (sentimentr package) (zoomed in)
-ggplot(sentiment_value_per_model %>% filter(val.variable == "sentimentr_value"), aes(y = val.value)) +
+model_sentimentr_zoom <- ggplot(sentiment_value_per_model %>% filter(val.variable == "sentimentr_value"), aes(y = val.value)) +
   geom_boxplot() +
   ylab("Average sentiment value") +
-  ggtitle("Sentiment analysis results zoomed in (sentimentr package)", subtitle = "Per model (+ number of reviews") +
+  ggtitle("Sentiment analysis results zoomed in (sentimentr package)", subtitle = "Per model (+ number of reviews)") +
   scale_y_continuous(breaks = seq(-1,1,0.3), limits = c(-1,1)) +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
-        strip.text = element_text(size=7)) +
+        text = element_text(size=7)) +
   facet_wrap(vars(Model))
 
 # Analysis per base/pro/pro max for Apple phones
@@ -170,15 +183,15 @@ sentimentr_apple_models <- sentimentr_apple_models %>%
   ungroup() %>%
   unite(Type, c(Type, review_count), sep='\n')
 
-ggplot(sentimentr_apple_models, aes(y = val.value)) +
+apple_model_sentimentr <- ggplot(sentimentr_apple_models, aes(y = val.value)) +
   geom_boxplot() +
-  ylab("Average sentiment value") +
+  ylab("Sentiment value") +
   ggtitle("Sentiment analysis results (sentimentr package)", subtitle = "Apple model types (+ number of reviews)") +
   scale_y_continuous(breaks = seq(-3,3,0.3), limits = c(-3,3)) +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
-        strip.text = element_text(size=7)) +
+        text = element_text(size=8)) +
   facet_wrap(vars(Type))
 
 # Save sentimentr value for each review in a dataset
-write.csv(sentimentr_per_review, "script/sentiment_analysis/sentiment_data/sentimentr_per_review.csv")
+write.csv(sentimentr_per_review, here::here("script/sentiment_analysis/sentiment_data/sentimentr_per_review.csv"))

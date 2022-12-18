@@ -1,0 +1,216 @@
+---
+title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
+author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    theme:
+      bootswatch: united
+---
+
+```{r, include=FALSE}
+source(here::here("script/sentiment_analysis/sentiment_analysis.R"))
+```
+
+# Sentiment analysis
+
+This section aims at attributing a sentiment score to each review. We have decided to work with the `nrc` and `afinn` dictionaries from the `tidytext` package as well as with the `sentimentr` package. This approach proposes more granular sentiment scoring than the `tidyverse` and `quanteda` packages which only provide positive, negative or negative-positive classification.
+
+We used all three datasets for this analysis, namely the smartphone_reviews_final.csv, Apple_final.csv and Samsung_final.csv. To prepare the data, we decided to tokenize the reviews by lowercasing, removing punctuation and removing numbers. Below is a glimpse to the tokenized version of the reviews of the smartphone_reviews_final.csv dataset which includes all the reviews (Apple and Samsung).
+
+```{r, eval=FALSE, echo=TRUE}
+# # Read data
+all_reviews <- read.csv(here::here("data/smartphone_reviews_final.csv"))
+apple <- read.csv(here::here("data/Apple_final.csv"))
+samsung <- read.csv(here::here("data/Samsung_final.csv"))
+
+# # Unnest tokens
+all_reviews_token <- all_reviews %>% 
+  mutate(review_id = seq(1:nrow(all_reviews))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                input = "Reviews",
+                to_lower = TRUE,
+                strip_punct = TRUE,
+                strip_numeric = TRUE)
+  
+apple_token <- apple %>% 
+  mutate(review_id = seq(1:nrow(apple))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                 input = "Reviews",
+                 to_lower = TRUE,
+                 strip_punct = TRUE,
+                 strip_numeric = TRUE)
+
+samsung_token <- samsung %>% 
+  mutate(review_id = seq(1:nrow(samsung))) %>% 
+  relocate(review_id, .before = "Brand") %>% 
+  unnest_tokens(output = "word",
+                input = "Reviews",
+                to_lower = TRUE,
+                strip_punct = TRUE,
+                strip_numeric = TRUE)
+```
+
+```{r}
+str(all_reviews_token)
+```
+
+## Apple vs. Samsung
+
+Using the tokenized version of the reviews, we first proceeded to a sentiment analysis using the`nrc` dictionary from the `tidytext` package to compare overall sentiment scores between Apple and Samsung reviews. We created our own function called `sentiment_function` in order to return the data in the desired format. See the function code and its application below.
+
+```{r, eval=FALSE, echo=TRUE}
+# # This function runs a sentiment analysis using the 'nrc' dictionary
+sentiment_function <- function(token_data, id_column, sentiment_column){
+  sentiment_data <- inner_join(token_data, get_sentiments("nrc"),
+                                by = c("word" = "word"))
+  
+  sentiment_matrix <- table(sentiment_data[[id_column]],
+                                  sentiment_data[[sentiment_column]])
+  return(sentiment_matrix)
+}
+
+# # Get sentiment analysis: Apple vs. Samsung
+# Sentiment based using "nrc" dictionary
+for (i in list(apple_token, samsung_token)){
+  # Perform the sentiment analysis
+  sentiment_analysis <- sentiment_function(i, "review_id", "sentiment")
+  
+  # Print the plot
+  sentiment_plot <- ggplot(tibble(sentiment = names(colSums(sentiment_analysis)),
+                sum_value = colSums(sentiment_analysis)),
+         aes(x = reorder(sentiment, -sum_value), y = sum_value)) +
+    geom_col() +
+    ggtitle(i$Brand[1]) +
+    ylab("Number of tokens") +
+    xlab("Sentiment") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
+  
+  # Assign graph
+  assign(paste0("sentiment_", i$Brand[1]), sentiment_plot)
+}
+```
+
+```{r, out.width='70%'}
+sentiment_Apple + sentiment_Samsung + plot_annotation(title = "Sentiment analysis results (nrc dictionary)")
+```
+
+This graph shows some signals that Apple reviews contains more sentiments linked to trust and joy than the ones of Samsung. Apple phones also seems to trigger relatively less sadness, fear and disgust compared to its counter part.
+
+Secondly, we proceeded to a sentiment analysis using the `afinn` dictionary and the `sentimentr` function. Again, we will show the function we created to return the results in the desired formats as well as an example of its implementation.
+
+```{r, eval=FALSE, echo=TRUE}
+# This function runs 2 sentiment analysis using 'afinn' dictionary and sentimentr package
+# Note that if the parameters for one of the two (or the two) sentiment analysis
+# are empty, it will only run the one for which it has parameters or return NULL
+
+value_function <- function(data_text=NULL, data_token=NULL, id_column=NULL, value_column=NULL){
+  data_value_afinn <- NULL
+  data_value_sentimentr <- NULL
+  
+  if (!is.null(data_token) | !is.null(data_text)){
+    if (!is.null(data_token)){
+      # Get "afinn" sentiment value
+      data_value_afinn <- inner_join(data_token, get_sentiments("afinn"),
+                                  by = c("word" = "word")) %>%
+        group_by(review_id = {{id_column}}) %>% 
+        summarise(afinn_value = mean({{value_column}})) %>% 
+        melt(id.vars = "review_id")
+    }
+    
+    if (!is.null(data_text)){
+      # Get "sentimentr" sentiment value
+      data_value_sentimentr <- get_sentences(data_text) %>% 
+        sentiment() %>% 
+        group_by(review_id = element_id) %>% 
+        summarise(sentimentr_value = mean(sentiment)) %>% 
+        melt(id.vars = "review_id")
+    }
+    
+    if (!is.null(data_value_afinn) & !is.null(data_value_sentimentr)){
+      # Join the data into one table
+      data_value <- rbind(data_value_afinn, data_value_sentimentr)
+      return(data_value)
+      
+    } else if (!is.null(data_value_afinn)){
+      return(data_value_afinn)
+      
+    } else if (!is.null(data_value_sentimentr)){
+      return(data_value_sentimentr)
+      
+    } else {
+      return(NULL)
+    }
+  }
+}
+
+# Value based using "afinn" dictionary and "sentimentr"
+# Valence shifter: https://www.r-bloggers.com/2020/04/sentiment-analysis-in-r-with-sentimentr-that-handles-negation-valence-shifters/
+index <- 1
+data_list <- list(apple, samsung)
+for (i in list(apple_token, samsung_token)){
+  # Perform the sentiment value analysis
+  value_analysis <- value_function(data_list[[index]]$Reviews, i, review_id, value)
+  
+  # Print the plot
+  value_plot <- ggplot(value_analysis, aes(y = value, fill = variable)) +
+      geom_boxplot() +
+      ylab("Average sentiment value") +
+      ggtitle(i$Brand[1]) +
+      scale_y_continuous(breaks = seq(0,5,0.2), limits = c(0,5)) +
+      guides(fill=guide_legend("Sentiment method")) +
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank())
+  
+  # Assign graph
+  assign(paste0("value_", i$Brand[1]), value_plot)
+  
+  # Increment index
+  index <- index + 1
+}
+```
+
+```{r, out.width='70%'}
+value_Apple + value_Samsung + plot_annotation(title = "Sentiment analysis results (afinn dictionary and sentimentr package)")
+```
+
+It is interesting to see that according to the `afinn` dictionary, both brands have the exact same sentiment distribution. Regarding the `sentimentr` package, it looks like the sentiment scores are a tiny bit higher for Apple, but the difference is negligible.
+
+## Model comparison {.tabset}
+
+### 'nrc' dictionary
+
+```{r, out.width='100%', fig.height=7}
+model_nrc
+```
+
+### 'afinn' dictionary
+
+```{r, out.width='100%', fig.height=7}
+model_afinn
+```
+
+### 'sentimentr' package
+
+```{r, out.width='100%', fig.height=7}
+model_sentimentr_zoom
+```
+
+## 
+
+While there is a lot to say on these graphs, we will list the most interesting outcomes:
+
+1.  The iPhone 11 Pro Max, iPhone 13 Pro and the Samsung Galaxy S21 Plus seem to be the most appreciated phones. Note that the iPhone 13 Pro has a particularly high level of trust according to the `nrc` dictionary.
+2.  Among Apple phones and based on the `nrc` dictionary, it seems that the iPhone 12 mini is the model that is most associated with negative sentiments.
+3.  Overall, the Samsung Galaxy Note 20 Ultra, Samsung Galaxy S22 and Samsung Galaxy S22 Plus seem to be the least appreciated phones as they have a high count of negative tokens and relatively low sentiment scores (`afinn` and `sentimentr`).
+
+## Apple models: Base vs. Pro vs. Pro Max
+
+```{r, out.width='100%', fig.height=5}
+apple_model_sentimentr
+```
+
+Based on those results of the `sentimentr` package, we can see that Pro Max models seem to have slightly higher sentiment scores than the Pro and Base one. However, the difference seems to be negligible.
