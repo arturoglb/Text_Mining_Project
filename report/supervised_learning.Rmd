@@ -1,10 +1,76 @@
 ---
-output: html_document
-editor_options: 
-  chunk_output_type: inline
+title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
+author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    theme:
+      bootswatch: united
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
-source(here::here("script/setup.R"))
+```{r, include=FALSE}
+source(here::here("script/supervised_learning/analyse_randomForest.R"))
 ```
+# Supervised learning: Predicting with random forest
+This part of the report attempts to use the results of the sentiment analysis and document embedding to train a random forest algorithm to predict reviews' sentiment. The following dataset (15'297 x 53) has been used to train the algorithm (only the first and last dimension of the document embedded matrix are displayed):
+```{r, eval=FALSE, echo=TRUE}
+# # Read sentiment score per review
+sentimentr_documents <- read.csv(here::here("script/sentiment_analysis/sentiment_data/sentimentr_per_review.csv")) %>% 
+  select(review_id, brand = Brand, model = Model, sentimentr_score = sentimentr_value)
+
+# # Read document embedded matrix
+embedded_documents <- select(read.csv(here::here("script/unsupervised_learning/embedding/embedding_data/embedded_documents.csv")), -X) %>%
+  mutate(review_id = as.integer(rownames(.))) %>% 
+  relocate(review_id, .before = V1)
+
+# Join sentiment and embedding matrix to form the dataset
+dataset <- left_join(embedded_documents, sentimentr_documents,  by = "review_id") %>% 
+  select(-review_id)
+dataset$brand <- as.factor(dataset$brand)
+dataset$model <- as.factor(dataset$model)
+```
+```{r}
+str(dataset[c(1,50:53)])
+```
+The following code has been used to train the random forest (100, 500 and 1000 trees):
+```{r, eval=FALSE, echo=TRUE}
+# # Training and testing dataset
+# Split the data
+set.seed(456)
+split <- sample.split(dataset, SplitRatio = 0.75)
+train <- subset(dataset, split == "TRUE")
+test <- subset(dataset, split == "FALSE")
+
+# # Train the model: Random forest regressor
+nb_trees <- 100 # 500, 1000
+fit <- randomForest(data = train,
+                    sentimentr_score ~ .,
+                    ntree = nb_trees,
+                    mtry = 25,
+                    importance=TRUE)
+
+# Save the model
+save(fit, file = paste0(here::here("script/models/randomForest/rf_", nb_trees, ".RData")))
+```
+The accuracy of the model has been measured on the test set using the `caret::RMSE` function and results have been plotted in order to visualize prediction accuracy. The plot below contains subset of 2500 reviews out of 4040 in the test set:
+```{r, eval=FALSE, echo=TRUE}
+# # Evaluate model accuracy on test set
+predictions <- predict(fit, test[1:ncol(test)-1])
+accuracy <- RMSE(predictions, test[["sentimentr_score"]])
+
+# Data frame including actual values and predictions
+results <- tibble(actual = test[["sentimentr_score"]],
+                  predictions = predictions) %>% 
+  arrange(actual)
+results["paired"] <- 1:nrow(results)
+results <- melt(results, id.vars = "paired")
+
+# Data to be plotted
+set.seed(500)
+plot_data <- filter(results, paired %in% sample(1:nrow(results), 5000))
+plot_actual <- filter(plot_data, variable == "actual")
+```
+```{r, out.width='70%', fig.align='center'}
+randomForest_plot
+```
+This graph shows that the random forest model is performing pretty poorly overall. It performs particularly bad when it comes to predicting extreme sentiment values. Also, it looks like it is predicting between 0.5 and -0.1 at random, no matter this input. One of the main explanation is that the training of the model is based on approximate labelling of the data. Indeed, the sentiment score is given by the `sentimentr` package which is already limited in accuracy. Also, the embedding of documents is itself based on the assumption that reviews can be summarised in 50-dimension vectors averaging the 50-dimension word vectors it contains. To improve its accuracy, it might be worth trying to increasing the number of dimensions of those vectors in addition to increasing the size of the training set. Furthermore, some improvements could be made on the sentiment score attribution. It could be that some natural language processing deep learning algorithm would perform better in capturing the sentiments of the reviews.

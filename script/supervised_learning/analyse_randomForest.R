@@ -36,15 +36,17 @@ results <- melt(results, id.vars = "paired")
 
 # Data to be plotted
 set.seed(500)
-plot_data <- filter(results, paired %in% sample(1:nrow(results), 5000))
+plot_data <- filter(results, paired %in% sample(1:nrow(test), 2500))
 plot_actual <- filter(plot_data, variable == "actual")
 
-ggplot(plot_data, aes(x = paired, y = value)) +
+randomForest_plot <- ggplot(plot_data, aes(x = paired, y = value)) +
   geom_point(aes(color = variable)) +
   geom_line(aes(group = paired), size = 0.3, color = "red", alpha = 0.3, show.legend = FALSE) +
   geom_line(data = plot_actual, aes(x = paired, y = value), size = 2, alpha = 0.4) +
-  ggtitle("Random forest predictions",
-          subtitle = paste0("Range of original data: min = ", round(min(dataset$sentimentr_score), 2),
+  ggtitle("Random forest: Prediction of reviews' sentiment score",
+          subtitle = paste0("Range of sentiment score: min = ", round(min(dataset$sentimentr_score), 2),
                             " , max = ", round(max(dataset$sentimentr_score), 2), "\nRMSE = ", round(accuracy, 2))) +
+  xlab("Reviews ordered by actual sentiment score") +
+  ylab("Sentiment score") + 
   scale_color_manual(values = c("black", "red")) +
   scale_alpha(guide = "none")
