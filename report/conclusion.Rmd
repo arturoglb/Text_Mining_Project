@@ -16,6 +16,10 @@ source(here::here("script/setup.R"))
 ## **References**
 
 [Topic model. (2022, September 27). In Wikipedia.](https://en.wikipedia.org/wiki/Topic_model)
+RS, A.M.R. (2020) Sentiment analysis in R with {sentimentr} that handles negation (valence shifters): R-bloggers, R. Available at: https://www.r-bloggers.com/2020/04/sentiment-analysis-in-r-with-sentimentr-that-handles-negation-valence-shifters/ (Accessed: December 18, 2022). 
+Word2vec (no date) README. Available at: https://cran.r-project.org/web/packages/word2vec/readme/README.html (Accessed: December 18, 2022). 
+
+
 
 
 
