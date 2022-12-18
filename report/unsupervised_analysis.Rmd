@@ -13,69 +13,26 @@ source(here::here("script/setup.R"))
 
 ### **Similarities**
 
-For this section, we will be analyzing the similarities between each of the documents and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects.
+For the unsupervised learning analysis, we will be analyzing the similarities between each of the models and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects.
 
 ```{r}
-# compute the Jaccard index matrix, the cosine matrix, and the Euclidean distances matrix.
-# smartphone.jac <- textstat_simil(
-#   Smartphone_reviews.tfidf,
-#   method = "jaccard",
-#   margin = "documents")
-# 
-# smartphone.cos <- textstat_simil(
-#   Smartphone_reviews.tfidf.group,
-#   method = "cosine",
-#   margin = "documents")
-
 smartphone.euc <- textstat_dist(
   Smartphone_reviews.tfidf.group,
   method = "euclidean",
   margin = "documents")
-
 ```
 
-To highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews.
+To read the euclidean distance from the matrix is quite complex since there are several models. Therefore, to highlight similarities in an easier way, we create a heatmap representation of the similarities between the reviews.
 
-Looking at the heatmap below, we can conclude the following points:
+Looking at the heatmap of the grouped reviews below, we can conclude the following points:
 
 -   iPhone 11 is not similar to any other phone. The closest one to it is the iPhone 11 Pro where the euclidean distance is around 0.5.
 -   Samsung Galaxy S21 FE is not similar to any other phone
--   Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models.
+-   Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models, excpet of course to iPhone 11 and 11 Pro.
 
-Further, we have seen the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the more dissimilar models from all the other models.
+Further, we have studied the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar or further the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the most dissimilar models from all the other models.
 
 ```{r}
-# make a heatmap representation of the similarities between the documents.
-
-# ## Jaccard 
-# smartphone.jac.matrix <- melt(as.matrix(smartphone.jac)) # Convert the object to matrix then to data frame 
-# ggplot(data = smartphone.jac.matrix, 
-#        mapping = aes(x = Var1, y = Var2, fill = value)) +
-#   scale_fill_gradient2(
-#     low = "blue",
-#     high = "red",
-#     mid = "white", 
-#     midpoint = 0.5,
-#     limit = c(0, 1),
-#     name = "Jaccard") +
-#   geom_tile() + xlab("") + ylab("")
-# 
-# 
-# ## Cosine
-# smartphone.cos.matrix <- melt(as.matrix(smartphone.cos))
-# ggplot(
-#   data = smartphone.cos.matrix,
-#   mapping = aes(x = Var1, y = Var2, fill = value)) +
-#   scale_fill_gradient2(
-#     low = "blue",
-#     high = "red",
-#     mid = "white",
-#     midpoint = 0.5,
-#     limit = c(0, 1),
-#     name = "Cosine") +
-#   geom_tile() + xlab("") + ylab("")
-
-
 ## Euclidean
 
 # Since we are taking the Euclidean distance, we will first need to transform the distances to similarities bounded between 0-1. 
@@ -84,7 +41,7 @@ max_dist <- max(smartphone.euc.matrix$value) # to get the maximum distance
 smartphone.euc.matrix$value.std <- (max_dist - smartphone.euc.matrix$value)/max_dist 
 
 #Heatmap
-ggplot(
+ggplotly(ggplot(
   data = smartphone.euc.matrix,
   mapping = aes(x = Var1, 
                 y = Var2,
@@ -95,32 +52,30 @@ ggplot(
     mid = "white", 
     midpoint = 0.5,
     limit = c(0, 1),
-    name = "Euclidean") +
+    name = "Similarity") +
   geom_tile() + xlab("") + ylab("") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=0.95),
-        strip.text = element_text(size=7))
+        strip.text = element_text(size=7)))
 
 
 library(qgraph)
 
 qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 
-# tried this code to get the inverse of the matrix to make the thinkness meaning more similar but didn't work
-# qgraph((1/as.matrix(smartphone.euc)), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 ```
 
 ### **Clustering of Documents**
 
-Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which state. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
+Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which stage are they clustered together. We can see here that one of the first clusters that was made was between iPhone 13 Pro and Samsung Galaxy 21 Ultra. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
+
+For the clustering below, we have chosen the complete linkage method as it provides almost the same results as average linkage method and shows clearly distic=nct clusters. 
 
 ```{r}
-smartphone.hc <- hclust(as.dist(smartphone.euc))
-## smartphone.hc <- hclust(as.dist(1 - smartphone.jac)) # use this line for Jaccard
-## smartphone.hc <- hclust(as.dist(1 - smartphone.cos)) # use this line for Cosine
+smartphone.hc <- hclust(as.dist(smartphone.euc), method = "complete")
 plot(smartphone.hc)
 ```
 
-```{r}
+```{r, include=FALSE}
 
 smartphone.clust <- cutree(smartphone.hc, k = 4)
 smartphone.clust
@@ -130,9 +85,12 @@ smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
+Analyzing the results of the kmeasns on 4 clusters, we can see that we have the ration of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares
+<br>
+
 ##### Extract the ten words that are the most used.
 
-We have then created the 4 clusters and have chosen to extract the 10 words that are more often used
+We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about. 
 
 ```{r}
 data.frame(
@@ -151,17 +109,21 @@ data.frame(
 )
 ```
 
+
 #### **Similarities between Words**
 
 Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together.
 
 
+Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words used in the reviews. However, the word "samsung" has the most dissimilarities with the others compared to the other words. Looking into details, to the similarities of the word "samsung", we can see that the most similar words to it are "camera" and "fast". Therefore, we can say that, between all the features, what most people commented about in the samsung phone is it's speed and it's camera. 
 
-Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words. However, the word "samsung" has the most dissimilarities with the others compared to the other words. 
+<br>
+
+On the other hand, if we look at the similarity matrix for the iPhone, we can see that is is similar to almost all the features that were mentioned which means that the consumers have mentioned those features evenly in their reviews. However, it is least similar to the words, "camera", "fast", and "card". Which means that these words were not mentioned a lot in the iPhone reviews with respect to other words.  
 
 ```{r}
 smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% 
-  filter(rank <= 40) # words with frequency rank less than 40 (it should correspond to the 40 most frequent words 
+  filter(rank <= 50) # words with frequency rank less than 40 (it should correspond to the 50 most frequent words 
 smartphone.feat$feature
 
 smartphone.word.cos <- textstat_simil(
@@ -170,7 +132,7 @@ smartphone.word.cos <- textstat_simil(
   margin = "feature")
 smartphone.word.cos.matrix <- melt(as.matrix(smartphone.word.cos)) # Convert the object to matrix then to data frame 
 
-ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
+ggplotly(ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
   scale_fill_gradient2(
     low = "blue",
     high = "red",
@@ -183,31 +145,37 @@ ggplot(data = smartphone.word.cos.matrix, aes(x=Var1, y=Var2, fill=value)) +
     axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
     axis.text.y = element_text(size = 8)) +
   xlab("") + 
-  ylab("")
+  ylab(""))
 ```
 
 #### Clustering Words
 
-
-From the below dendrogram we can see that the first 2 words that were clustered were "life " and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.  
-
-From the below dendrogram we can see that the first 2 words that were clustered were "life" and saver" and then "screen protector". It is worth mentioning that the dendrogram below is created from a dissimilarity matrix.
+The below dendrogram shows how each word is clustered and with the other words. we can c;early see four (4) clusters. As seen previously in the heatmap, the word samsung will be clustered in a cluster by itself as it is the most dissimilar word from the others.
 
 ```{r}
-smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos))
+smartphone.word.hc <- hclust(as.dist(1 - smartphone.word.cos), method = "complete")
 plot(smartphone.word.hc)
 ```
 
 #### Cooccurence
 
-Cooccurence describes how words occur together which in turn captures the different relationships between words.
+Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see thatthe most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram. 
 
 ```{r}
 
 #### TO CHECK IF WE SHOULD USE THE GROUPED ONE ####
 
+Smartphone_reviews.tk.group <- tokens(
+  Smartphone_reviews.cp.group,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_separators = TRUE) %>%
+  tokens_tolower() %>%
+  tokens_remove(stop_words$word)
 
-smartphone.fcm <- fcm(Smartphone_reviews.tk, 
+
+smartphone.fcm <- fcm(Smartphone_reviews.tk.group, 
                  window = 3, 
                  tri = FALSE)
 smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2 
@@ -216,13 +184,11 @@ smartphone.fcm <- (smartphone.fcm + t(smartphone.fcm))/2
 ```{r}
 # heat map of the most frequent features
 
-
-
 smartphone.fcm.mat <- melt(
   as.matrix(
     smartphone.fcm[smartphone.feat$feature, smartphone.feat$feature]),
   varnames = c("Var1", "Var2")) 
-ggplot(data = smartphone.fcm.mat, 
+ggplotly(ggplot(data = smartphone.fcm.mat, 
        mapping = aes(x = Var1, y = Var2, fill = value)) +
   scale_fill_gradient2(
     low = "blue",
@@ -235,7 +201,7 @@ ggplot(data = smartphone.fcm.mat,
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
         axis.text.y = element_text(size = 5)) +
   xlab("") +
-  ylab("")
+  ylab(""))
 
 ```
 
@@ -246,7 +212,7 @@ smartphone.inv_occ <-
   280 - as.matrix(
     smartphone.fcm[smartphone.feat$feature, smartphone.feat$feature]) ## 280 is the max co-occurrence here
 
-smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ))
+smartphone.occ.hc <- hclust(as.dist(smartphone.inv_occ), method = "complete")
 plot(smartphone.occ.hc)
 ```
 
