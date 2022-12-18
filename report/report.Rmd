@@ -4,6 +4,11 @@ author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltr
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
+    code_folding: hide 
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
     theme:
       bootswatch: united
 ---
@@ -14,5 +19,7 @@ text-align: justify}
 
 
 ```{r child = c('intro.Rmd', 'eda.Rmd', 'sentiment_analysis.Rmd', 'unsupervised_analysis.Rmd', 'word_document_embedding.Rmd', 'document_clustering.Rmd', 'supervised_learning.Rmd', 'conclusion.Rmd')}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
+
 ```
 
