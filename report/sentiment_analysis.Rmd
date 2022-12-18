@@ -1,19 +1,14 @@
 ---
-title: "Quality comparison of customer reviews of different smartphones on online marketplaces"
-author: "Nadine Obeid, Clarence Koehle, Lucas Vogt and Arturo García Luna Beltrán"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  html_document:
-    code_folding: hide
-    theme:
-      bootswatch: united
+output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include=FALSE}
 source(here::here("script/sentiment_analysis/sentiment_analysis.R"))
 ```
 
-# Sentiment analysis
+### **Sentiment analysis**
 
 This section aims at attributing a sentiment score to each review. We have decided to work with the `nrc` and `afinn` dictionaries from the `tidytext` package as well as with the `sentimentr` package. This approach proposes more granular sentiment scoring than the `tidyverse` and `quanteda` packages which only provide positive, negative or negative-positive classification.
 
@@ -58,7 +53,7 @@ samsung_token <- samsung %>%
 str(all_reviews_token)
 ```
 
-## Apple vs. Samsung
+### **Apple vs. Samsung**
 
 Using the tokenized version of the reviews, we first proceeded to a sentiment analysis using the`nrc` dictionary from the `tidytext` package to compare overall sentiment scores between Apple and Samsung reviews. We created our own function called `sentiment_function` in order to return the data in the desired format. See the function code and its application below.
 
@@ -179,27 +174,27 @@ value_Apple + value_Samsung + plot_annotation(title = "Sentiment analysis result
 
 It is interesting to see that according to the `afinn` dictionary, both brands have the exact same sentiment distribution. Regarding the `sentimentr` package, it looks like the sentiment scores are a tiny bit higher for Apple, but the difference is negligible.
 
-## Model comparison {.tabset}
+### **Model comparison {.tabset}**
 
-### 'nrc' dictionary
+#### 'nrc' dictionary
 
 ```{r, out.width='100%', fig.height=7}
 model_nrc
 ```
 
-### 'afinn' dictionary
+#### 'afinn' dictionary
 
 ```{r, out.width='100%', fig.height=7}
 model_afinn
 ```
 
-### 'sentimentr' package
+#### 'sentimentr' package
 
 ```{r, out.width='100%', fig.height=7}
 model_sentimentr_zoom
 ```
 
-## 
+## {-}
 
 While there is a lot to say on these graphs, we will list the most interesting outcomes:
 
@@ -207,7 +202,7 @@ While there is a lot to say on these graphs, we will list the most interesting o
 2.  Among Apple phones and based on the `nrc` dictionary, it seems that the iPhone 12 mini is the model that is most associated with negative sentiments.
 3.  Overall, the Samsung Galaxy Note 20 Ultra, Samsung Galaxy S22 and Samsung Galaxy S22 Plus seem to be the least appreciated phones as they have a high count of negative tokens and relatively low sentiment scores (`afinn` and `sentimentr`).
 
-## Apple models: Base vs. Pro vs. Pro Max
+### **Apple models: Base vs. Pro vs. Pro Max**
 
 ```{r, out.width='100%', fig.height=5}
 apple_model_sentimentr

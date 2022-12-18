@@ -13,6 +13,6 @@ text-align: justify}
 </style>
 
 
-```{r child = c('intro.Rmd', 'eda.Rmd', 'sentiment_analysis.Rmd', 'unsupervised_analysis.Rmd', 'supervised_learning', 'conclusion.Rmd')}
+```{r child = c('intro.Rmd', 'eda.Rmd', 'sentiment_analysis.Rmd', 'unsupervised_analysis.Rmd', 'word_document_embedding.Rmd', 'document_clustering.Rmd', 'supervised_learning.Rmd', 'conclusion.Rmd')}
 ```
 

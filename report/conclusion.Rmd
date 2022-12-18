@@ -4,21 +4,16 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
-source(here::here("script/setup.R"))
-```
-
 ## **Conclusion**
 
 
 
 ## **References**
 
-[Topic model. (2022, September 27). In Wikipedia.](https://en.wikipedia.org/wiki/Topic_model)
-[Susan Li. (2018, May 31). Towards to Data Science.](https://towardsdatascience.com/topic-modeling-and-latent-dirichlet-allocation-in-python-9bf156893c24)
-RS, A.M.R. (2020) Sentiment analysis in R with {sentimentr} that handles negation (valence shifters): R-bloggers, R. Available at: https://www.r-bloggers.com/2020/04/sentiment-analysis-in-r-with-sentimentr-that-handles-negation-valence-shifters/ (Accessed: December 18, 2022). 
-Word2vec (no date) README. Available at: https://cran.r-project.org/web/packages/word2vec/readme/README.html (Accessed: December 18, 2022).
+* [Topic model. (2022, September 27). In Wikipedia.](https://en.wikipedia.org/wiki/Topic_model)
+* [Susan Li. (2018, May 31). Towards to Data Science.](https://towardsdatascience.com/topic-modeling-and-latent-dirichlet-allocation-in-python-9bf156893c24)
+* RS, A.M.R. (2020) Sentiment analysis in R with {sentimentr} that handles negation (valence shifters): R-bloggers, R. Available at: https://www.r-bloggers.com/2020/04/sentiment-analysis-in-r-with-sentimentr-that-handles-negation-valence-shifters/ (Accessed: December 18, 2022). 
+* Word2vec (no date) README. Available at: https://cran.r-project.org/web/packages/word2vec/readme/README.html (Accessed: December 18, 2022).
 
 
 
