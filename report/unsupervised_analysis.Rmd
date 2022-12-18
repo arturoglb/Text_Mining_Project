@@ -1,7 +1,7 @@
 ---
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r, include=FALSE}
@@ -241,47 +241,66 @@ plot(smartphone.occ.hc)
 
 We decided to use Topic modeling to discover the abstract "topics" that occur in a collection of documents, in this case the grouped corpus of smartphones Models (*Wikipedia,2022*). Topic Modeling will help us to identify the context of the documents by detecting similar words patterns inside them, and by clustering those group of words together.
 
-#### **LSA on TF (DFM)**
+#### **LSA on Term Frequencies (DFM)** {.tabset}
 
-Latent Semantic Analysis, or LSA, is one of the techniques that we will use for topic modeling. LSA is a reduction technique that decomposes the DTM into 3 matrices ($M = 𝑈Σ𝑉^{𝑡}$), where $Σ$ represents the strength of the topic, $𝑈$ the links between the document and each topic, and $𝑉^{t}$ the links between the terms and each topic.
+Latent Semantic Analysis, or LSA, is one of the techniques that we will use for topic modeling. LSA is a reduction technique that decomposes the DTM into 3 matrices ($M = 𝑈Σ𝑉^{𝑡}$), where $Σ$ represents the strength of the topic, $𝑈$ the links among the document and every topic, and $𝑉^{t}$ the links between the terms and each topic.
 
+First, we started by plotting the first dimension to corroborate if it is associated with the document length, as it is known that this happens in LSA dim1. Looking at the result observed on the tab called Dimension 1, we can confirm that it is the case, as we detect that Dimension 1 is negatively correlated. Furthermore, we can see that the **iPhone 11** is in the bottom-right hand side of the chart being the one with the highest amount of tokens, while **Samsung Galaxy 21 Ultra** is located on the top-left hand side with the lowest amount.
 
+On the second tab "Topics 2 and 3", we interpret which words are the top 5 associated to topics 2 and 3, and the top5 negatively associated to those topics. In the table for Topic 2 we detect that the words "scratch", "iphone", "condition", "battery" and "product" are the ones associated to this topic, while "5g", "s20", "camera", "phone" and "samsung" are negatively linked. We can say that Topic 2 can be identified on models from the brand Apple. On the other hand, in the table for Topic 3 we discover that the main words related to this topic were - pro, samsung, arrive, battery and camera - and the negative associated were brand, buy, iphone, unlock, and phone. This Topic may be seen on model reviews from the brand Samsung and some of the Pro models from Apple.
 
-```{r, warning=FALSE}
+For a visual representation of the words stated previously on topic 2 and topic 3, we plot the dimensions that correspond to those topics (*Dim 2 & 3*) in a biplot chart. In the tab "Biplot of Dim 2 and 3" we can confirm the points mentioned before, as we note the same words associated with Dim 2 (*Topic 2*) and negatively associated, same case for Dim 3 (*Topic 3*). Samsung Galaxy S21 FE, iPhone 11 Pro Max and iPhone 11 Pro are associated with Topic 3, while iPhone 11 is unconnected to this topic. For Topic 2 we can determine that iPhone 11 Pro, iPhone 11 Pro Max, iPhone 11, and iPhone 12 are related to it. 
+
+##### Dimension 1 {.active}
+
+```{r, fig.width=8}
+library(plotly)
+
+# Build LSA object
 Smartphone_reviews.lsa <- textmodel_lsa(
   x = Smartphone_reviews.dfm.group,
   nd = 5) 
 
-# Ddefine the number of terms to filter
-n.terms <- 5
+models.freq <- ntoken(Smartphone_reviews.tk.group)
+lsa.dim1 <- data.frame(models.freq,
+           dim1 = Smartphone_reviews.lsa$docs[, 1])
+lsa.dim1$names <- rownames(lsa.dim1)
+lsa.dim1 <- data.frame(lsa.dim1)
 
-# For Dimension 1
-w.order <- sort(Smartphone_reviews.lsa$features[, 1], decreasing = TRUE)
-w.top1 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
+# Plot chart
+plot_ly(data = lsa.dim1, x = ~models.freq, y = ~dim1, color = ~names,
+        colors = "Set1", text = ~paste("Model: ", names)) %>% 
+  layout(xaxis = list(title = 'Number of Tokens'), 
+         yaxis = list(title = 'LSA Dim 1'),
+         legend = list(title=list(text='<b> Smartphone Models </b>')))
+```
+
+##### Topics 2 and 3
+
+```{r}
+# Define the number of terms to filter
+n.terms <- 5
 
 # For Dimension 2
 w.order <- sort(Smartphone_reviews.lsa$features[, 2], decreasing = TRUE)
 w.top2 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
 
+
 # For Dimension 3
 w.order <- sort(Smartphone_reviews.lsa$features[,3], decreasing = TRUE)
 w.top3 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
 
-# For Dimension 4
-w.order <- sort(Smartphone_reviews.lsa$features[, 4], decreasing = TRUE)
-w.top4 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-
-# For Dimension 5
-w.order <- sort(Smartphone_reviews.lsa$features[, 5], decreasing = TRUE)
-w.top5 <- c(w.order[1:n.terms], rev(rev(w.order)[1:n.terms]))
-
-w.top1
-w.top2
-w.top3
-w.top4
-w.top5
+w.top2 %>% 
+  kable(caption = "Topic 2") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) 
+w.top3 %>% 
+  kable(caption = "Topic 3") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                fixed_thead = T) 
 ```
 
+##### Biplot of Dim 2 and 3
 
 ```{r}
 w.subset <- Smartphone_reviews.lsa$features[
@@ -295,23 +314,17 @@ biplot(
   xlab = "Dim 2",
   ylab = "Dim 3")
 
-w.subset <- Smartphone_reviews.lsa$features[
-    c(unique(c(names(w.top5), names(w.top5)))), 4:5]
-
-biplot(
-  y = Smartphone_reviews.lsa$docs[, 4:5],
-  x = w.subset,
-  col = c("black","red"),
-  cex = c(0.8, 0.8),
-  xlab = "Dim 4",
-  ylab = "Dim 5")
 ```
 
-#### **LSA on TF (TF-IDF)**
+## {-}
+
+#### **LSA on Term Frequencies (TF-IDF)**
+
+
 
 ```{r, warning=FALSE}
 Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
-                                         nd = 10) 
+                                         nd = 5) 
 head(Smartphone_reviews.lsa2$docs)
 head(Smartphone_reviews.lsa2$features)
 Smartphone_reviews.lsa2$sk
