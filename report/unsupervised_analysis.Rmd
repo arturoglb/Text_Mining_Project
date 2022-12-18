@@ -68,7 +68,7 @@ qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="
 
 Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which stage are they clustered together. We can see here that one of the first clusters that was made was between iPhone 13 Pro and Samsung Galaxy 21 Ultra. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
 
-For the clustering below, we have chosen the complete linkage method as it provides almost the same results as average linkage method and shows clearly distic=nct clusters. 
+For the clustering below, we have chosen the complete linkage method as it provides almost the same results as average linkage method and shows clearly distic=nct clusters.
 
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc), method = "complete")
@@ -85,12 +85,11 @@ smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
-Analyzing the results of the kmeasns on 4 clusters, we can see that we have the ration of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares
-<br>
+Analyzing the results of the kmeasns on 4 clusters, we can see that we have the ration of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares <br>
 
 ##### Extract the ten words that are the most used.
 
-We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about. 
+We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about.
 
 ```{r}
 data.frame(
@@ -109,17 +108,15 @@ data.frame(
 )
 ```
 
-
 #### **Similarities between Words**
 
 Then we do the similarities by words. We also create a heat map to show the similarities between words. Surprisingly, the heat map below does not show similarities between any of the words. The closest similarity between two words was between "life" and "saver" with around 0.55 cosine angle which makes sense since those two (2) words sometimes come together.
 
-
-Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words used in the reviews. However, the word "samsung" has the most dissimilarities with the others compared to the other words. Looking into details, to the similarities of the word "samsung", we can see that the most similar words to it are "camera" and "fast". Therefore, we can say that, between all the features, what most people commented about in the samsung phone is it's speed and it's camera. 
+Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words used in the reviews. However, the word "samsung" has the most dissimilarities with the others compared to the other words. Looking into details, to the similarities of the word "samsung", we can see that the most similar words to it are "camera" and "fast". Therefore, we can say that, between all the features, what most people commented about in the samsung phone is it's speed and it's camera.
 
 <br>
 
-On the other hand, if we look at the similarity matrix for the iPhone, we can see that is is similar to almost all the features that were mentioned which means that the consumers have mentioned those features evenly in their reviews. However, it is least similar to the words, "camera", "fast", and "card". Which means that these words were not mentioned a lot in the iPhone reviews with respect to other words.  
+On the other hand, if we look at the similarity matrix for the iPhone, we can see that is is similar to almost all the features that were mentioned which means that the consumers have mentioned those features evenly in their reviews. However, it is least similar to the words, "camera", "fast", and "card". Which means that these words were not mentioned a lot in the iPhone reviews with respect to other words.
 
 ```{r}
 smartphone.feat <- textstat_frequency(Smartphone_reviews.dfm.group) %>% 
@@ -159,7 +156,7 @@ plot(smartphone.word.hc)
 
 #### Cooccurence
 
-Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see thatthe most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram. 
+Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see thatthe most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram.
 
 ```{r}
 
@@ -228,7 +225,7 @@ First, we started by plotting the first dimension to corroborate if it is associ
 
 On the second tab "Topics 2 and 3", we interpret which words are the top 5 associated to topics 2 and 3, and the top5 negatively associated to those topics. In the table for Topic 2 we detect that the words "scratch", "iphone", "condition", "battery" and "product" are the ones associated to this topic, while "5g", "s20", "camera", "phone" and "samsung" are negatively linked. We can say that Topic 2 can be identified on models from the brand Apple. On the other hand, in the table for Topic 3 we discover that the main words related to this topic were - pro, samsung, arrive, battery and camera - and the negative associated were brand, buy, iphone, unlock, and phone. This Topic may be seen on model reviews from the brand Samsung and some of the Pro models from Apple.
 
-For a visual representation of the words stated previously on topic 2 and topic 3, we plot the dimensions that correspond to those topics (*Dim 2 & 3*) in a biplot chart. In the tab "Biplot of Dim 2 and 3" we can confirm the points mentioned before, as we note the same words associated with Dim 2 (*Topic 2*) and negatively associated, same case for Dim 3 (*Topic 3*). Samsung Galaxy S21 FE, iPhone 11 Pro Max and iPhone 11 Pro are associated with Topic 3, while iPhone 11 is unconnected to this topic. For Topic 2 we can determine that iPhone 11 Pro, iPhone 11 Pro Max, iPhone 11, and iPhone 12 are related to it. 
+For a visual representation of the words stated previously on topic 2 and topic 3, we plot the dimensions that correspond to those topics (*Dim 2 & 3*) in a biplot chart. In the tab "Biplot of Dim 2 and 3" we can confirm the points mentioned before, as we note the same words associated with Dim 2 (*Topic 2*) and negatively associated, same case for Dim 3 (*Topic 3*). Samsung Galaxy S21 FE, iPhone 11 Pro Max and iPhone 11 Pro are associated with Topic 3, while iPhone 11 is unconnected to this topic. For Topic 2 we can determine that iPhone 11 Pro, iPhone 11 Pro Max, iPhone 11, and iPhone 12 are related to it.
 
 ##### Dimension 1 {.active}
 
@@ -293,15 +290,15 @@ biplot(
 
 ```
 
-## {-}
+##  {.unnumbered}
 
 #### **LSA on Term Frequencies (TF-IDF)**
 
 Now, we apply the same approach as above, but in this case we will use the TF-IDF matrix. As we have already explain, the TF-IDF quantifies the relevance of a word in a document. First, we build the LSA object with the `textmodel_lsa` function from the `quanteda.textmodels` package with our matrix created for the TF-IDF grouped model reviews(*only 5 dimensions*). Next, we break down the data for interpretability by considering only the 5 words with the highest values and the 5 with the lowest values. Finally, we plot the Biplot to identify the Topics and its words associated and unrelated.
 
-What we discover is that Topic 2 (*Dim 2*) is associated to the words "scratch", "iphone", "generic", "health", "renew" and the models iPhone 11 Pro, iPhone 11, iPhone 11 Pro Max. Thereby, is unrelated to terms such as "s21", "s8", "samsung", "s20", "fe" and the model Samsung Galaxy S21 FE. For Topic 3 (*Dim 3*) we see a relation with terms like "aesthetic", "mica", "generic", "pro", "max" and iPhone 11 Pro, iPhone 11 Pro Max, but unrelated to iPhone 11 and the words "transfer", "red", "yellow", "purple", "daughter". 
+What we discover is that Topic 2 (*Dim 2*) is associated to the words "scratch", "iphone", "generic", "health", "renew" and the models iPhone 11 Pro, iPhone 11, iPhone 11 Pro Max. Thereby, is unrelated to terms such as "s21", "s8", "samsung", "s20", "fe" and the model Samsung Galaxy S21 FE. For Topic 3 (*Dim 3*) we see a relation with terms like "aesthetic", "mica", "generic", "pro", "max" and iPhone 11 Pro, iPhone 11 Pro Max, but unrelated to iPhone 11 and the words "transfer", "red", "yellow", "purple", "daughter".
 
-Comparing both (*DFM and TF-IDF*) LSA approaches, we identify that for Topic 2 the words that are similar are "scratch" and "iphone". This make sense, as we have seen that the main concern from iPhone reviewers is comparing their new model with previous models (*usage of term iphone*) or praising/complaining about the current status of the smartphone received (*usage of term scratch*). For Topic 3, we detect that terms changed significantly, meaning that the context of the topic would be different, with the exception of the word **Pro**. 
+Comparing both (*DFM and TF-IDF*) LSA approaches, we identify that for Topic 2 the words that are similar are "scratch" and "iphone". This make sense, as we have seen that the main concern from iPhone reviewers is comparing their new model with previous models (*usage of term iphone*) or praising/complaining about the current status of the smartphone received (*usage of term scratch*). For Topic 3, we detect that terms changed significantly, meaning that the context of the topic would be different, with the exception of the word **Pro**.
 
 ```{r, warning=FALSE}
 Smartphone_reviews.lsa2 <- textmodel_lsa(Smartphone_reviews.tfidf.group, 
@@ -324,11 +321,11 @@ biplot(
   ylab="Dim 3")
 ```
 
-#### **LDA** 
- 
+#### **LDA**
+
 Latent Dirichlet Allocation (LDA) is a topic modeling algorithm that is used to identify the topics present in a collection of documents. It is a generative model that assumes that each document is a mixture of a fixed number of topics, and that each word in the document is associated with one of the topics (*Susan Li, 2018*).
 
-We decided to incorporate this algorithm to our dataset, so we build the LDA object with the `textmodel_lda` function from the `seededlda` package. We wanted to apply the same amount of topics (*5 topics*) similar than the LSA DTM approach because we tried with 10, 9, and 7 topics but the results were not meaningful. 
+We decided to incorporate this algorithm to our dataset, so we build the LDA object with the `textmodel_lda` function from the `seededlda` package. We wanted to apply the same amount of topics (*5 topics*) similar than the LSA DTM approach because we tried with 10, 9, and 7 topics but the results were not meaningful.
 
 Below we can observe the top 5 terms appearing on each topic
 
@@ -344,16 +341,15 @@ seededlda::terms(Smartphone_reviews.lda, 5) %>%
 
 ##### **Term-Topic Analysis**
 
-The $ϕ$ (phi) is a term-topic distribution. It represents the probability of a term occurring in a given topic. To rephrase it, for a given topic, the $ϕ$ values indicate the likelihood of each term being associated with that topic. The terms with the highest $ϕ$  values are the ones that are most strongly associated with the topic. To visualize those associations we plot the $ϕ$  values with the 10 largest probabilities terms inside each subject.
+The $ϕ$ (phi) is a term-topic distribution. It represents the probability of a term occurring in a given topic. To rephrase it, for a given topic, the $ϕ$ values indicate the likelihood of each term being associated with that topic. The terms with the highest $ϕ$ values are the ones that are most strongly associated with the topic. To visualize those associations we plot the $ϕ$ values with the 10 largest probabilities terms inside each subject.
 
 So we can interpret the following:
 
-* Topic 1: The reviews found with this topic will talk more about the color of the models, the capacity, and size.
-* Topic 2: It is mainly related to the term phone, so we expect that this topic will be among all models (*Topic-Document Analysis*).
-* Topic 3: Refers to more to the characteristics and conditions of the smartphones.
-* Topic 4: We can assume that this topic will be associated with some of the iPhone models, as we see the terms "pro" and "max" on the top 3, and maybe some samsung models, due to the words "aesthetic", detail. 
-* Topic 5: The top terms tell us that this topic is oriented to the brand Samsung, as we can identify the main terms are related to Samsung models.
-
+-   Topic 1: The reviews found with this topic will talk more about the color of the models, the capacity, and size.
+-   Topic 2: It is mainly related to the term phone, so we expect that this topic will be among all models (*Topic-Document Analysis*).
+-   Topic 3: Refers to more to the characteristics and conditions of the smartphones.
+-   Topic 4: We can assume that this topic will be associated with some of the iPhone models, as we see the terms "pro" and "max" on the top 3, and maybe some samsung models, due to the words "aesthetic", detail.
+-   Topic 5: The top terms tell us that this topic is oriented to the brand Samsung, as we can identify the main terms are related to Samsung models.
 
 ```{r}
 # Term-Topic Analysis
@@ -377,19 +373,19 @@ phi.long %>%
 
 ```
 
-##### **Topic-Document Analysis** 
+##### **Topic-Document Analysis**
 
-The θ matrix (theta) is a document-topic distribution. It represents the probability of a topic occurring in a given document. To put it in another way, for a given document, the θ values indicate the likelihood of each topic being present in that document. 
+The θ matrix (theta) is a document-topic distribution. It represents the probability of a topic occurring in a given document. To put it in another way, for a given document, the θ values indicate the likelihood of each topic being present in that document.
 
 Looking at the below chart, we can identify the following:
 
-* The models reviews from the first row, the iPhone 13 mini, iPhone 13 Pro, and iPhone 13 Pro Max mostly talk 50% about Topic 3. 
-* Unsurprisingly we see that all models have a significant percentage that is about Topic 2.
-* On Samsung models its observed that Topic 4 had a minor appearance. However, for Apple models we see a higher participation. 
-* Topic 5 is mainly observed in all Samsung models. Meaning that what we believed on the previous analysis is correct.
-* About Topic 1 is slightly prevalent on the mini models of Apple, the Iphone 13, and the Samsung models S20 Plus and FE. 
+-   The models reviews from the first row, the iPhone 13 mini, iPhone 13 Pro, and iPhone 13 Pro Max mostly talk 50% about Topic 3.
+-   Unsurprisingly we see that all models have a significant percentage that is about Topic 2.
+-   On Samsung models its observed that Topic 4 had a minor appearance. However, for Apple models we see a higher participation.
+-   Topic 5 is mainly observed in all Samsung models. Meaning that what we believed on the previous analysis is correct.
+-   About Topic 1 is slightly prevalent on the mini models of Apple, the Iphone 13, and the Samsung models S20 Plus and FE.
 
-```{r, fig.width=10}
+```{r}
 # Topic-Document Analysis
 set.seed(123)
 theta.long <- melt(
@@ -418,12 +414,33 @@ ggplot(theta.long,
 #     strip.text = element_text(size = 8))
 ```
 
+##### **LDA Diagnostics across Topics - *Prevalence, Coherence and Exclusivity* -**
 
-##### **LDA Diagnostics across Topics - Prevalent, Coherence and Exclusivity -**
+There are several ways to evaluate the quality of a topic model, for this case, we have consider to evaluate the LDA using metrics such as prevalence, coherence, and exclusivity.
+
+Prevalence is a measure of how frequently a topic appears in the documents. A topic with a high prevalence is likely to be important and relevant to the overall collection of documents, while a topic with a low prevalence may not be as important or relevant.
+
+Coherence is a measure of how well the words within a topic are related to each other. A topic with high coherence is likely to be more interpretable and easier to understand, while a topic with low coherence may be more difficult to interpret.
+
+Exclusivity is a measure of how unique a topic is compared to the other topics in the model. A topic with high exclusivity is likely to be more distinct and easily separable from other topics, while a topic with low exclusivity may overlap with other topics and be harder to distinguish.
+
+On the top left-hand side of the chart below, we can observe that the most prevalent topic among the models is Topic 2, this makes sense, as we have seen on the previous chart that this topic was a the most common. Additionally, we detect that Topic 2 is also the most coherent, whereas the least coherent is Topic 1. But we can note that Topic 1 is the most exclusive because its five terms are more specific to it.
 
 ```{r}
 # Most Prevalent Topic
-rev(sort(colSums(Smartphone_reviews.lda$theta)/sum(Smartphone_reviews.lda$theta)))
+prevalence.topic <- rev(sort(colSums(Smartphone_reviews.lda$theta)/sum(Smartphone_reviews.lda$theta))) %>% 
+  data.frame()
+prevalence.topic$Topic <- rownames(prevalence.topic)
+prevalence.topic <- data.frame(prevalence.topic) %>% 
+  rename("Prevalence" = ".")
+
+# Plot the Prevalence
+p5 <- ggplot(prevalence.topic,
+       aes(x = Topic,
+           y = Prevalence,
+           fill = Topic)) + 
+  geom_bar(stat="identity") +
+  ylab("Prevalence") 
 
 # Topic Coherence
 speech.codo <- fcm(
@@ -449,14 +466,20 @@ for (k in 1:5) {
     }
   }
 }
-rev(sort(Coh))
+coherence.topic <- rev(sort(Coh)) %>% 
+  data.frame()
+coherence.topic$Topic <- rownames(coherence.topic)
+coherence.topic <- data.frame(coherence.topic) %>% 
+  rename("Coherence" = ".")
 
-# See coherent Topic
-as.matrix(speech.codo[term.mat[, 2], term.mat[, 2]])
-
-# See least coherent Topic
-as.matrix(speech.codo[term.mat[, 1], term.mat[, 1]])
-
+# Plot the Coherence
+p6 <- ggplot(coherence.topic,
+       aes(x = Topic,
+           y = Coherence,
+           fill = Topic)) + 
+  geom_bar(stat="identity") +
+  ylab("Coherence") +
+  coord_flip()
 
 # Exclusivity of the topic
 excl <- rep(0, 5)
@@ -468,5 +491,20 @@ for (k in 1:5) {
   }
   excl[k] <- excl[k] / length(term.mat[, k])
 }
-rev(sort(excl))
+
+exclusivity.topic <- rev(sort(excl)) %>% 
+  data.frame()
+exclusivity.topic$Topic <- rownames(exclusivity.topic)
+exclusivity.topic <- data.frame(exclusivity.topic) %>% 
+  rename("Exclusivity" = ".")
+
+# Plot the Exclusivity
+p7 <- ggplot(exclusivity.topic,
+       aes(x = Topic,
+           y = Exclusivity,
+           fill = Topic)) + 
+  geom_bar(stat="identity") +
+  ylab("Exclusivity") 
+
+(p5|p7) / p6
 ```
