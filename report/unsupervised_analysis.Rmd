@@ -30,7 +30,9 @@ Looking at the heatmap of the grouped reviews below, we can conclude the followi
 -   Samsung Galaxy S21 FE is not similar to any other phone
 -   Samsung Galaxy S22 and S22 Plus are the ones that are similar to almost all the remaining phone models, excpet of course to iPhone 11 and 11 Pro.
 
-Further, we have studied the graph that plots the euclidean distances based on the thickness of the line connecting them. The thicker the line, the more dissimilar or further the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the most dissimilar models from all the other models.
+Further, we have studied the graph that plots the euclidean distances based on the thickness of the line connecting them (*Qgraph*). The thicker the line, the more dissimilar or further the models are. Therefore, as we have seen in the heat map earlier and based on the thickness of the lines we see, this graphs also confirms our previous findings that Samsung Galaxy S21 FE and iPhone 11 are the most dissimilar models from all the other models.
+
+### Heat Map {.active}
 
 ```{r, fig.align='center'}
 ## Euclidean
@@ -56,13 +58,18 @@ ggplotly(ggplot(
   geom_tile() + xlab("") + ylab("") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.2, hjust=0.95),
         strip.text = element_text(size=7)))
+```
 
+### Qgraph
 
+```{r}
 library(qgraph)
 
 qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 
 ```
+##{-}
+
 
 ### **Clustering of Documents**
 

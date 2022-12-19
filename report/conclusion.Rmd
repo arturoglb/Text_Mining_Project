@@ -6,7 +6,29 @@ editor_options:
 
 # **Conclusion**
 
+In conclusion, the data preparation for this study involved collecting smartphone reviews from the US Amazon marketplace for Apple and Samsung phones and cleaning and prepping the data by detecting and translating non-English reviews and removing non-conforming formats, symbols, numbers, and separators, as well as "stop words" and performing lemmatization to reduce repetition. We have found that the most common words in all the reviews were "phone," "battery," and "screen," and that the main topics of concern for consumers were battery life and screen quality. 
 
+Deep diving into the analysis of the reviews by conducting the sentiment analysis revealed that, according to the nrc dictionary, Apple reviews contained more trust and joy compared to Samsung reviews, and that Apple phones also triggered relatively less sadness, fear, and disgust. We noted that iPhone 11 reviews in general are a bit different than the other phones reviews. 
+
+Further, the unsupervised learning analysis showed that the iPhone 11 and Samsung Galaxy S21 FE were the most dissimilar reviews and that the word "samsung" had the most dissimilarities with other words. We could have explained that the dissimilarities of the iPhone 11 reviews is explained by the large number of reviews on it compared to other phones which made it more diverse and talking about different aspects. However, as we have seen in the lexical diversity, it is the least diverse of all the reviews. The same has been noticed when doing the topic modeling technique Latent Semantic Analysis (LSA) since both iPhone 11 and Samsung Galaxy S21 FE were clearly orthogonal to most of the other models. The topic modeling technique Latent Dirichlet Allocation (LDA) identified common patterns and topics within the documents, such as battery life, screen quality, camera performance, and the sentiment of consumers towards the phones and sellers. 
+
+As we have seen for the word and document embedding the results showed that the clustering was able to group similar reviews together and surface patterns in the data. The cluster sizes were not uniformly distributed, and the average length of reviews varied among the clusters.Various clusters were made depending on the content such as battery and battery life, phone conditions, happy customers and bad comments.  
+
+Finally, for the supervised learning analysis with the usage of random forest and gradient boosting performed poorly. We found that the most important features in predicting the rating of a review were the phone characteristics, screen size, and storage capacity. 
+
+The overall analysis of smartphone reviews on Amazon US provided insights about consumers' reactions and sentiments about iPhone and Samsung models and their sellers. Based on the conclusion provided, some recommendations for future studies could include:
+
+1. Expanding the dataset to include reviews from other marketplaces or countries to see if the findings are consistent or if there are any regional differences in consumer preferences.
+
+2. Using additional techniques for sentiment analysis, applying other dictionaries or incorporating machine learning algorithms, to see if the results change or are more accurate.
+
+3. Investigating the influence of other factors, such as the seller or brand reputation, on consumer opinions and ratings.
+
+4. Applying more advanced machine learning techniques, such as deep learning, to see if they improve the accuracy of the rating predictions.
+
+5. Examining the impact of specific phone features, such as camera quality or durability, on consumer ratings and preferences.
+
+6. Analyzing the reviews over time to see how consumer opinions change as new models are released and technology advances.
 
 # **References**
 
