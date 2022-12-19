@@ -14,7 +14,7 @@ Further, the unsupervised learning analysis showed that the iPhone 11 and Samsun
 
 As we have seen for the word and document embedding the results showed that the clustering was able to group similar reviews together and surface patterns in the data. The cluster sizes were not uniformly distributed, and the average length of reviews varied among the clusters.Various clusters were made depending on the content such as battery and battery life, phone conditions, happy customers and bad comments.  
 
-Finally, for the supervised learning analysis with the usage of random forest and gradient boosting performed poorly. We found that the most important features in predicting the rating of a review were the phone characteristics, screen size, and storage capacity. 
+Finally, the supervised learning analysis with the usage of random forest performed poorly. The model seemed to predict at random. We concluded that the reasons were mainly because of the techniques used to create the training and testing sets.
 
 The overall analysis of smartphone reviews on Amazon US provided insights about consumers' reactions and sentiments about iPhone and Samsung models and their sellers. Based on the conclusion provided, some recommendations for future studies could include:
 
