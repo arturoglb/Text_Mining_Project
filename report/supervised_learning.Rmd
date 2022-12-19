@@ -8,7 +8,7 @@ editor_options:
 source(here::here("script/supervised_learning/analyse_randomForest.R"))
 ```
 
-## **Supervised learning: Predicting with random forest**
+# **Supervised learning: Predicting with random forest**
 
 This part of the report attempts to use the results of the sentiment analysis and document embedding to train a random forest algorithm to predict reviews' sentiment. The following dataset (15'297 x 53) has been used to train the algorithm (only the first and last dimension of the document embedded matrix are displayed):
 

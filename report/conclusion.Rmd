@@ -4,11 +4,11 @@ editor_options:
   chunk_output_type: inline
 ---
 
-## **Conclusion**
+# **Conclusion**
 
 
 
-## **References**
+# **References**
 
 * [Topic model. (2022, September 27). In Wikipedia.](https://en.wikipedia.org/wiki/Topic_model)
 * [Susan Li. (2018, May 31). Towards to Data Science.](https://towardsdatascience.com/topic-modeling-and-latent-dirichlet-allocation-in-python-9bf156893c24)

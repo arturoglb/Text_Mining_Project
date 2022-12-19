@@ -8,7 +8,7 @@ editor_options:
 source(here::here("script/sentiment_analysis/sentiment_analysis.R"))
 ```
 
-### **Sentiment analysis**
+## **Sentiment Analysis**
 
 This section aims at attributing a sentiment score to each review. We have decided to work with the `nrc` and `afinn` dictionaries from the `tidytext` package as well as with the `sentimentr` package. This approach proposes more granular sentiment scoring than the `tidyverse` and `quanteda` packages which only provide positive, negative or negative-positive classification.
 
@@ -174,21 +174,21 @@ value_Apple + value_Samsung + plot_annotation(title = "Sentiment analysis result
 
 It is interesting to see that according to the `afinn` dictionary, both brands have the exact same sentiment distribution. Regarding the `sentimentr` package, it looks like the sentiment scores are a tiny bit higher for Apple, but the difference is negligible.
 
-### **Model comparison {.tabset}**
+### **Model comparison** {.tabset}
 
-#### 'nrc' dictionary
+#### 'nrc' Dictionary
 
 ```{r, out.width='100%', fig.height=7}
 model_nrc
 ```
 
-#### 'afinn' dictionary
+#### 'afinn' Dictionary
 
 ```{r, out.width='100%', fig.height=7}
 model_afinn
 ```
 
-#### 'sentimentr' package
+#### 'sentimentr' Package
 
 ```{r, out.width='100%', fig.height=7}
 model_sentimentr_zoom
