@@ -15,7 +15,7 @@ This section explains the steps we did for the retrieval of the data from the US
 
 ## **Data Retrieval**
 
-During this section, we have scrapped from the US Amazon marketplace the smartphone reviews of Apple and Samsung phones. We have decided to retrieve the reviews of the eleventh, twelfth, and the thirteenth generations of Apple. Also, we have consider the Generation S20, 2S21, and S22 for Samsung. The phones concerning each of the generation with the amount of reviews are described as follows:
+During this section, we have decided to retrieve the reviews of the eleventh, twelfth, and the thirteenth generations of Apple. Also, we have consider the Generation S20, 2S21, and S22 for Samsung. The phones concerning each of the generation with the amount of reviews are described as follows:
 
 * **Apple - 12,965 obs**
     + Generation 11th - **10,276 obs**
@@ -49,6 +49,7 @@ During this section, we have scrapped from the US Amazon marketplace the smartph
         
 From these numbers above that were obtained from US amazon, we can deduce that consumers that buy Apple mobile phones from Amazon are more than consumers who buy Samsung phones as we observe that users are more willingly to review the phones from Apple. Furthermore, the Generation 11 of Apple had the largest amount of reviews compared to the rest with a total of 10,276 reviews. 
 
+Below find an example of how the data looks
 
 ```{r}
 smartphone_reviews <- read.csv(here::here("data/smartphone_reviews.csv"))
