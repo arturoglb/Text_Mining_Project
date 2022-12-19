@@ -11,7 +11,7 @@ source(here::here("script/setup.R"))
 
 # **Unsupervised Learning**
 
-## **Similarities**
+## **Similarities** {.tabset}
 
 For the unsupervised learning analysis, we will be analyzing the similarities between each of the models and the similarities between words that are present in the reviews. Out of the three distance measurements, we will be using Euclidean Distance as our distance/similarity measurement for this project as it compares the shortest distance among objects.
 
