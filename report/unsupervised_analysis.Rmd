@@ -66,9 +66,9 @@ qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="
 
 ### **Clustering of Documents**
 
-Moving on to the Clustering of Documents, we have created some dendrograms to show which models are similar to each other and at which stage are they clustered together. We can see here that one of the first clusters that was made was between iPhone 13 Pro and Samsung Galaxy 21 Ultra. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
+Moving on to the Clustering of Documents, we have used both hierarchical and kmeans models. We started by creating some dendrograms to show which models are similar to each other and at which stage are they clustered together. We can see here that one of the first clusters that was made was between iPhone 13 Pro and Samsung Galaxy 21 Ultra. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
 
-For the clustering below, we have chosen the complete linkage method as it provides almost the same results as average linkage method and shows clearly distic=nct clusters.
+For the clustering below, we have chosen the complete linkage method as it provides almost the same results as average linkage method and shows clearly distict clusters.
 
 ```{r}
 smartphone.hc <- hclust(as.dist(smartphone.euc), method = "complete")
@@ -85,11 +85,14 @@ smartphone.km <- kmeans(Smartphone_reviews.tfidf.group, centers = 4)
 smartphone.km$cluster
 ```
 
+
 Analyzing the results of the K-means on 4 clusters, we can see that we have the ratio of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares <br>
 
 #### Extract the ten words that are the most used. {.tabset}
 
-We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about.
+After creating the dendrograms we analyzed the results of the kmeans clustering on 4 clusters. We can see that we have the ratio of Between Sum of Squares to the Total Sum of Squares equal to around 90% making the ratio of Within Sum of Squares equal to 10%. These results look promising as we would like to increase the Between Sum of Squares and decrease the Within Sum of Squares <br>
+
+We have then created the 4 clusters and have chosen to extract the 10 words that are more often used in each cluster to get an insight on what each cluster talks about. We did that for both models and as we can see below the 4 clusters are the same regardless whether hierarchical clustering or kmeans model was used. Only the order was changed. 
 
 ##### Clusters based on TF-IDF - Grouped by Model {.active}
 ```{r}
@@ -126,7 +129,6 @@ Then we do the similarities by words. We also create a heat map to show the simi
 
 Then we do the similarities by words. We also create a heat map to show the similarities between words. The heat map below shows similarities between all of the words used in the reviews. However, the word "samsung" has the most dissimilarities with the others compared to the other words. Looking into details, to the similarities of the word "samsung", we can see that the most similar words to it are "camera" and "fast". Therefore, we can say that, between all the features, what most people commented about in the samsung phone is it's speed and it's camera.
 
-<br>
 
 On the other hand, if we look at the similarity matrix for the iPhone, we can see that is is similar to almost all the features that were mentioned which means that the consumers have mentioned those features evenly in their reviews. However, it is least similar to the words, "camera", "fast", and "card". Which means that these words were not mentioned a lot in the iPhone reviews with respect to other words.
 
