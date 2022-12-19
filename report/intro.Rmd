@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, cache=FALSE, warning=FALSE)
 source(here::here("script/setup.R"))
 ```
 
-Analyzing product reviews is essential as it gives insights on how people feel, think, and react to a certain product. For this project, we will be analyzing reviews of two main products, Apple and Samsung phones, each of which has different models. The main purpose of this project is to analyze and compare the interaction of the consumers on Amazon's website with each of the models of those two phone brands.  and how they describe them.
+Analyzing product reviews is essential as it gives insights on how people feel, think, and react to a certain product. For this project, we will be analyzing reviews of two main products, Apple and Samsung phones, each of which has different models. The main purpose of this project is to analyze and compare the interaction of the consumers on Amazon's website with each of the models of those two phone brands, and how they describe them.
 
 We will be studying the interaction by analyzing the difference in review texts between these two brands by consumers over time and distinguishing similarities as well as differences in the vocabulary used to describe the phone from all perspectives such as functionality, memory, state, etc. To get a better overview and more relevant results with respect to the technology used and the development of mobile phones, we will be focusing only on the newest three generations for each brand; Apple and Samsung phones that have been introduced in the years 2019, 2020, and 2021. The following are the models that this project will focus on:
 
