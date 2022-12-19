@@ -170,7 +170,7 @@ plot(smartphone.word.hc)
 
 ### **Co-occurence**
 
-Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see thatthe most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram.
+Cooccurence describes how words occur together which in turn captures the different relationships between words. From there we can see that the most coocuuring words together are the words "phone" and "battery". We can also clearly see that from the dendrogram.
 
 ```{r, fig.align='center'}
 
