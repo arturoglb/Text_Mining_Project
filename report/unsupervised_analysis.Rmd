@@ -68,10 +68,12 @@ library(qgraph)
 qgraph(as.matrix(smartphone.euc), shape= "circle", posCol= "darkgreen", negCol="darkred", layout="groups", vsize=10)
 
 ```
-##{-}
 
+## 
 
-### **Clustering of Documents**
+<br>
+
+## **Clustering of Documents**
 
 Moving on to the Clustering of Documents, we have used both hierarchical and kmeans models. We started by creating some dendrograms to show which models are similar to each other and at which stage are they clustered together. We can see here that one of the first clusters that was made was between iPhone 13 Pro and Samsung Galaxy 21 Ultra. Further, as you can see, we can choose to have four (4) clusters. Comparing the results of the dendrogram to our previous results, we can also confirm the dissimilarity level between the models and iPhone 11 and Samsung Galaxy S21 FE as they were added to the cluster in the last two iterations.
 
